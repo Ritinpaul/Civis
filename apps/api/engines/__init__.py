@@ -35,6 +35,11 @@ from engines.evaluation import (
     evaluation_engine,
     get_evaluation_engine,
 )
+from engines.repair import (
+    RepairEngine,
+    repair_engine,
+    get_repair_engine,
+)
 
 __all__ = [
     "IntelligenceEngine",
@@ -64,4 +69,7 @@ __all__ = [
     "EvaluationEngine",
     "evaluation_engine",
     "get_evaluation_engine",
+    "RepairEngine",
+    "repair_engine",
+    "get_repair_engine",
 ]
