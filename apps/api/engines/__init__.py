@@ -30,6 +30,11 @@ from engines.adaptation import (
     adaptation_engine,
     get_adaptation_engine,
 )
+from engines.evaluation import (
+    EvaluationEngine,
+    evaluation_engine,
+    get_evaluation_engine,
+)
 
 __all__ = [
     "IntelligenceEngine",
@@ -56,4 +61,7 @@ __all__ = [
     "AdaptationEngine",
     "adaptation_engine",
     "get_adaptation_engine",
+    "EvaluationEngine",
+    "evaluation_engine",
+    "get_evaluation_engine",
 ]

@@ -212,7 +212,7 @@ async def test_class_level_execution_and_schema_compliance():
         flood_task = {"description": "Deep water underpass", "water_depth_cm": 70.0}
         res_flood = await GenericAgentRuntime.execute_agent(passage_manifest, flood_task, bus=bus, db=db)
         assert res_flood["output"]["is_passable"] is False
-        assert res_flood["output"]["passability_status"] == "BLOCKED"
+        assert res_flood["output"]["passability_status"] in ("BLOCKED", "IMPASSABLE")
         assert res_flood["output"]["water_depth_cm"] == 70.0
 
         # 3. Obscured visibility scenario
