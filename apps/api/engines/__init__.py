@@ -1,1 +1,31 @@
-"""CIVIS package — populated in Phase 2+"""
+from engines.intelligence import (
+    IntelligenceEngine,
+    intelligence_engine,
+    get_intelligence_engine,
+    IncidentUnderstanding,
+    RequiredCapability,
+    CapabilityDecomposition,
+    SpecialistSpecification,
+    TestCase,
+    EvaluationSuite,
+    FailureAnalysis,
+    RepairPlan,
+    SwarmCoordination,
+    DEMO_RESPONSES,
+)
+
+__all__ = [
+    "IntelligenceEngine",
+    "intelligence_engine",
+    "get_intelligence_engine",
+    "IncidentUnderstanding",
+    "RequiredCapability",
+    "CapabilityDecomposition",
+    "SpecialistSpecification",
+    "TestCase",
+    "EvaluationSuite",
+    "FailureAnalysis",
+    "RepairPlan",
+    "SwarmCoordination",
+    "DEMO_RESPONSES",
+]
