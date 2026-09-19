@@ -19,6 +19,12 @@ from engines.act1 import (
     get_act1_orchestrator,
     ACT1_INCIDENT_DATA,
 )
+from engines.act2 import (
+    Act2Orchestrator,
+    act2_orchestrator,
+    get_act2_orchestrator,
+    ACT2_INCIDENT_DATA,
+)
 from engines.adaptation import (
     AdaptationEngine,
     adaptation_engine,
@@ -43,6 +49,10 @@ __all__ = [
     "act1_orchestrator",
     "get_act1_orchestrator",
     "ACT1_INCIDENT_DATA",
+    "Act2Orchestrator",
+    "act2_orchestrator",
+    "get_act2_orchestrator",
+    "ACT2_INCIDENT_DATA",
     "AdaptationEngine",
     "adaptation_engine",
     "get_adaptation_engine",

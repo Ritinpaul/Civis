@@ -170,6 +170,29 @@ async def trigger_act1_incident(
         }
 
 
+@router.post("/act2", response_model=dict)
+async def trigger_act2_incident(
+    sync: bool = Query(True, description="Whether to wait for completion before returning"),
+    auto_forge: bool = Query(False, description="Whether to automatically trigger Phase 8 (Forge) upon gap detection"),
+    db: Session = Depends(get_db),
+):
+    """Trigger Act II: 'The City Doesn't Know' (INC-002) directly from the incidents router."""
+    from engines.act2 import get_act2_orchestrator
+    orchestrator = get_act2_orchestrator()
+
+    if sync:
+        return await orchestrator.run(db=db, auto_forge=auto_forge)
+    else:
+        import asyncio
+        asyncio.create_task(orchestrator.run(auto_forge=auto_forge))
+        return {
+            "status": "started",
+            "act": "II",
+            "incident_id": "INC-002",
+            "message": "Act II started in background. Stream events at /events/stream?incident_id=INC-002",
+        }
+
+
 @router.get("/{incident_id}/timeline", response_model=List[dict])
 def get_incident_timeline(
     incident_id: str,

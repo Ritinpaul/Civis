@@ -56,3 +56,40 @@ async def run_act1(
             "incident_id": "INC-001",
             "message": "Act I started in background. Stream events at /events/stream?incident_id=INC-001",
         }
+
+
+class Act2RunRequest(BaseModel):
+    sync: bool = Field(default=False, description="Whether to wait for completion before returning")
+    delay: Optional[float] = Field(None, description="Pacing delay in seconds between events")
+    auto_forge: bool = Field(default=False, description="Whether to automatically trigger Phase 8 (Forge) upon gap detection")
+
+
+@router.post("/act2", response_model=dict)
+async def run_act2(
+    payload: Optional[Act2RunRequest] = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Trigger Act II: 'The City Doesn't Know'.
+    INC-002 Unknown Road Anomaly causes workforce to attempt and declare INSUFFICIENT.
+    Emits CAPABILITY_GAP (the hero moment) and optionally triggers Phase 8 (Forge).
+    """
+    from engines.act2 import Act2Orchestrator, get_act2_orchestrator
+
+    sync_mode = payload.sync if payload else False
+    delay_override = payload.delay if payload else None
+    auto_forge = payload.auto_forge if payload else False
+
+    orchestrator = Act2Orchestrator(delay=delay_override) if delay_override is not None else get_act2_orchestrator()
+
+    if sync_mode:
+        result = await orchestrator.run(db=db, auto_forge=auto_forge)
+        return {"status": "completed", **result}
+    else:
+        asyncio.create_task(orchestrator.run(auto_forge=auto_forge))
+        return {
+            "status": "started",
+            "act": "II",
+            "incident_id": "INC-002",
+            "message": "Act II started in background. Stream events at /events/stream?incident_id=INC-002",
+        }
