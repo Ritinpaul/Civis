@@ -50,6 +50,18 @@ from engines.act3 import (
     act3_orchestrator,
     get_act3_orchestrator,
 )
+from engines.act4 import (
+    Act4Orchestrator,
+    act4_orchestrator,
+    get_act4_orchestrator,
+    FLOOD_PASSABILITY_CAPABILITY,
+)
+from engines.provenance import (
+    ProvenanceEngine,
+    provenance_engine,
+    get_provenance_engine,
+    CANONICAL_20_EVENTS,
+)
 
 __all__ = [
     "IntelligenceEngine",
@@ -88,5 +100,14 @@ __all__ = [
     "Act3Orchestrator",
     "act3_orchestrator",
     "get_act3_orchestrator",
+    "Act4Orchestrator",
+    "act4_orchestrator",
+    "get_act4_orchestrator",
+    "FLOOD_PASSABILITY_CAPABILITY",
+    "ProvenanceEngine",
+    "provenance_engine",
+    "get_provenance_engine",
+    "CANONICAL_20_EVENTS",
 ]
+
 

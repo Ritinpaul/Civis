@@ -131,3 +131,39 @@ async def run_act3(
             "message": f"Act III started in background. Stream events at /events/stream?incident_id={incident_id}",
         }
 
+
+class Act4RunRequest(BaseModel):
+    sync: bool = Field(default=False, description="Whether to wait for completion before returning")
+    incident_id: str = Field(default="INC-002", description="Incident ID for provenance")
+
+
+@router.post("/act4", response_model=dict)
+async def run_act4(
+    payload: Optional[Act4RunRequest] = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Trigger Act IV: 'The City Has Grown — Capability Persistence'.
+    Permanently persists flood_passability v1.0.0 in the capability registry,
+    captures WorkforceSnapshot v2 (4 -> 5 capabilities), and emits provenance events.
+    """
+    from engines.act4 import Act4Orchestrator, get_act4_orchestrator
+
+    sync_mode = payload.sync if payload else False
+    incident_id = payload.incident_id if payload else "INC-002"
+
+    orchestrator = get_act4_orchestrator()
+
+    if sync_mode:
+        result = await orchestrator.persist_capability(incident_id=incident_id, db=db)
+        return {"status": "completed", **result}
+    else:
+        asyncio.create_task(orchestrator.persist_capability(incident_id=incident_id))
+        return {
+            "status": "started",
+            "act": "IV",
+            "incident_id": incident_id,
+            "message": f"Act IV started in background. Stream events at /events/stream?incident_id={incident_id}",
+        }
+
+

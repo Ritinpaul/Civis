@@ -63,6 +63,7 @@ from routers import (
     repair_router,
     authority_router,
     swarm_router,
+    provenance_router,
 )
 
 app.include_router(incidents_router)
@@ -76,4 +77,6 @@ app.include_router(evaluations_router)
 app.include_router(repair_router)
 app.include_router(authority_router)
 app.include_router(swarm_router)
+app.include_router(provenance_router)
+
 
