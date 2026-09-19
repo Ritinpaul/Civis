@@ -13,6 +13,12 @@ from engines.intelligence import (
     SwarmCoordination,
     DEMO_RESPONSES,
 )
+from engines.act1 import (
+    Act1Orchestrator,
+    act1_orchestrator,
+    get_act1_orchestrator,
+    ACT1_INCIDENT_DATA,
+)
 
 __all__ = [
     "IntelligenceEngine",
@@ -28,4 +34,8 @@ __all__ = [
     "RepairPlan",
     "SwarmCoordination",
     "DEMO_RESPONSES",
+    "Act1Orchestrator",
+    "act1_orchestrator",
+    "get_act1_orchestrator",
+    "ACT1_INCIDENT_DATA",
 ]

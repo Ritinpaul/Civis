@@ -3,6 +3,7 @@ from routers.capabilities import router as capabilities_router
 from routers.workforce import router as workforce_router
 from routers.events import router as events_router
 from routers.intelligence import router as intelligence_router
+from routers.demo import router as demo_router
 
 __all__ = [
     "incidents_router",
@@ -10,4 +11,5 @@ __all__ = [
     "workforce_router",
     "events_router",
     "intelligence_router",
+    "demo_router",
 ]

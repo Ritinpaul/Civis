@@ -146,3 +146,41 @@ async def update_incident(
         )
 
     return incident.to_dict()
+
+
+@router.post("/act1", response_model=dict)
+async def trigger_act1_incident(
+    sync: bool = Query(True, description="Whether to wait for completion before returning"),
+    db: Session = Depends(get_db),
+):
+    """Trigger Act I: 'The City Knows' (INC-001) directly from the incidents router."""
+    from engines.act1 import get_act1_orchestrator
+    orchestrator = get_act1_orchestrator()
+
+    if sync:
+        return await orchestrator.run(db=db)
+    else:
+        import asyncio
+        asyncio.create_task(orchestrator.run())
+        return {
+            "status": "started",
+            "act": "I",
+            "incident_id": "INC-001",
+            "message": "Act I started in background. Stream events at /events/stream?incident_id=INC-001",
+        }
+
+
+@router.get("/{incident_id}/timeline", response_model=List[dict])
+def get_incident_timeline(
+    incident_id: str,
+    db: Session = Depends(get_db),
+):
+    """Retrieve full chronological provenance event timeline for an incident."""
+    from models.provenance import ProvenanceEvent
+    events = (
+        db.query(ProvenanceEvent)
+        .filter(ProvenanceEvent.incident_id == incident_id)
+        .order_by(ProvenanceEvent.timestamp.asc())
+        .all()
+    )
+    return [e.to_dict() for e in events]

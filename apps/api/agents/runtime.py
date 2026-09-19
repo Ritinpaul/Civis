@@ -76,6 +76,7 @@ class AgentRuntime:
         input_data: Dict[str, Any],
         incident_id: Optional[str] = None,
         bus: Optional[EventBus] = None,
+        db: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """
         Execute agent reasoning pipeline:
@@ -101,6 +102,7 @@ class AgentRuntime:
                         message=f"Agent '{self.agent_id}' attempted to access unauthorized tool '{tool_name}'. Blocked by governance.",
                         payload={"agent_id": self.agent_id, "tool_name": tool_name},
                         incident_id=incident_id,
+                        db=db,
                     )
                 continue
 
@@ -173,6 +175,7 @@ class AgentRuntime:
                 message=summary_msg,
                 payload=response_payload,
                 incident_id=incident_id,
+                db=db,
             )
 
         return response_payload

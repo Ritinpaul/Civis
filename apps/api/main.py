@@ -57,6 +57,7 @@ from routers import (
     workforce_router,
     events_router,
     intelligence_router,
+    demo_router,
 )
 
 app.include_router(incidents_router)
@@ -64,3 +65,4 @@ app.include_router(capabilities_router)
 app.include_router(workforce_router)
 app.include_router(events_router)
 app.include_router(intelligence_router)
+app.include_router(demo_router)
