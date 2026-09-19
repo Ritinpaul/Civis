@@ -58,6 +58,7 @@ from routers import (
     events_router,
     intelligence_router,
     demo_router,
+    forge_router,
 )
 
 app.include_router(incidents_router)
@@ -66,3 +67,4 @@ app.include_router(workforce_router)
 app.include_router(events_router)
 app.include_router(intelligence_router)
 app.include_router(demo_router)
+app.include_router(forge_router)
