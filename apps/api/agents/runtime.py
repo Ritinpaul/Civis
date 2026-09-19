@@ -1,15 +1,14 @@
 """
-CIVIS — Agent Runtime
+CIVIS — Generic Agent Runtime (Phase 9)
 Derived from AgentVerse message-passing and actor architecture.
-Executes agent manifests with strict authority enforcement, tool invocation,
+Executes any agent manifest dynamically with hard authority enforcement, tool invocation,
 Gemini 2.5 Flash reasoning, and deterministic demo fallbacks.
 """
 import json
 import logging
 import re
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel
+from typing import Dict, List, Optional, Any, Union, Tuple
 
 from core.settings import get_settings
 from tools.registry import tool_registry, ToolRegistry
@@ -19,10 +18,16 @@ logger = logging.getLogger("civis.agent_runtime")
 settings = get_settings()
 
 
-class AgentRuntime:
+class GenericAgentRuntime:
     """
-    Runtime engine for executing a CIVIS agent.
-    Enforces authority boundaries, manages tool execution, and interfaces with Gemini.
+    Generic runtime engine for executing any CIVIS agent from its declarative manifest.
+    Reads manifest to determine:
+      - What inputs?
+      - What tools?
+      - What outputs?
+      - What permissions?
+    Enforces hard governance authority checks before EVERY tool invocation.
+    Derived from AgentVerse runtime patterns.
     """
 
     def __init__(
@@ -51,8 +56,84 @@ class AgentRuntime:
         self.allowed_tools = allowed_tools if allowed_tools is not None else list(tools)
         self.model_name = model_name or settings.gemini_fast_model
 
+    @classmethod
+    def from_manifest(
+        cls,
+        manifest: Union[Any, Dict[str, Any]],
+        db: Optional[Any] = None,
+    ) -> "GenericAgentRuntime":
+        """
+        Instantiate a GenericAgentRuntime from an Agent model, Pydantic specification, or manifest dict.
+        Synchronizes tool permissions against the database Authority table if db session is provided.
+        """
+        # 1. Extract fields
+        if hasattr(manifest, "to_manifest") and callable(manifest.to_manifest):
+            data = manifest.to_manifest()
+            authority_status = getattr(manifest, "authority_status", "authorized")
+        elif hasattr(manifest, "model_dump") and callable(manifest.model_dump):
+            data = manifest.model_dump()
+            authority_status = data.get("authority_status", "authorized")
+        elif isinstance(manifest, dict):
+            data = manifest
+            authority_status = data.get("authority_status", "authorized")
+        else:
+            # Fallback attribute extraction
+            data = {
+                "id": getattr(manifest, "id", getattr(manifest, "agent_id", "unknown-agent")),
+                "name": getattr(manifest, "name", "Unknown Agent"),
+                "version": getattr(manifest, "version", "1.0.0"),
+                "purpose": getattr(manifest, "purpose", ""),
+                "capability_ids": getattr(manifest, "capability_ids", []),
+                "tools": getattr(manifest, "tools", []),
+                "system_prompt": getattr(manifest, "system_prompt", ""),
+                "output_schema": getattr(manifest, "output_schema", {}),
+                "model": getattr(manifest, "model", None),
+            }
+            authority_status = getattr(manifest, "authority_status", "authorized")
+
+        agent_id = data.get("id") or data.get("agent_id") or "agent"
+        tools = list(data.get("tools") or [])
+
+        # 2. Determine allowed tools with governance check
+        allowed_tools: List[str] = []
+        if db is not None:
+            try:
+                from models.authority import Authority
+                auth_records = db.query(Authority).filter(Authority.agent_id == agent_id).all()
+                allowed_set = {a.tool_name for a in auth_records if a.decision == "allow"}
+                denied_set = {a.tool_name for a in auth_records if a.decision == "deny"}
+
+                if authority_status == "untrusted":
+                    # Untrusted agents ONLY have tools that were explicitly granted
+                    allowed_tools = [t for t in tools if t in allowed_set and t not in denied_set]
+                else:
+                    # Authorized/verified agents have their tools unless explicitly denied
+                    allowed_tools = [t for t in tools if t not in denied_set]
+            except Exception as e:
+                logger.warning(f"Could not query authorities from db: {e}")
+                allowed_tools = [] if authority_status == "untrusted" else list(tools)
+        else:
+            if authority_status == "untrusted":
+                allowed_tools = list(data.get("allowed_tools") or [])
+            else:
+                allowed_tools = list(data.get("allowed_tools") if "allowed_tools" in data else tools)
+
+        return cls(
+            agent_id=agent_id,
+            name=data.get("name", agent_id),
+            version=data.get("version", "1.0.0"),
+            purpose=data.get("purpose", ""),
+            capability_ids=list(data.get("capability_ids") or []),
+            tools=tools,
+            system_prompt=data.get("system_prompt", ""),
+            output_schema=data.get("output_schema") or {},
+            authority_status=authority_status,
+            allowed_tools=allowed_tools,
+            model_name=data.get("model") or data.get("model_name"),
+        )
+
     def to_manifest(self) -> Dict[str, Any]:
-        """Return the agent manifest dict."""
+        """Return the declarative agent manifest dict."""
         return {
             "id": self.agent_id,
             "name": self.name,
@@ -67,9 +148,43 @@ class AgentRuntime:
             "model": self.model_name,
         }
 
-    def check_tool_authority(self, tool_name: str) -> bool:
-        """Enforce tool authority: agent can only invoke explicitly allowed tools."""
-        return tool_name in self.allowed_tools
+    def check_tool_authority(self, tool_name: str, db: Optional[Any] = None) -> Tuple[bool, str]:
+        """
+        Hard governance check before invoking ANY tool.
+        Returns: (is_authorized: bool, reason: str)
+        1. Check database Authority table if db is provided.
+        2. Enforce untrusted status constraint.
+        3. Enforce allowed_tools whitelist.
+        """
+        # 1. Database Authority record check
+        if db is not None:
+            try:
+                from models.authority import Authority
+                auth = (
+                    db.query(Authority)
+                    .filter(Authority.agent_id == self.agent_id, Authority.tool_name == tool_name)
+                    .order_by(Authority.granted_at.desc())
+                    .first()
+                )
+                if auth:
+                    if auth.decision == "deny":
+                        return False, f"Tool '{tool_name}' explicitly DENIED by governance policy: {auth.reason or 'Unauthorized'}"
+                    elif auth.decision == "allow":
+                        if auth.expires_at and auth.expires_at < datetime.utcnow():
+                            return False, f"Authority grant for tool '{tool_name}' has expired."
+                        return True, "Explicit authority grant in governance registry."
+            except Exception as e:
+                logger.warning(f"Error checking DB authority for {self.agent_id}/{tool_name}: {e}")
+
+        # 2. Untrusted status check
+        if self.authority_status == "untrusted" and tool_name not in self.allowed_tools:
+            return False, f"Agent '{self.agent_id}' has authority status UNTRUSTED. Tool execution blocked by governance."
+
+        # 3. Whitelist check
+        if tool_name not in self.allowed_tools:
+            return False, f"Tool '{tool_name}' not in allowed_tools for agent '{self.agent_id}'."
+
+        return True, "Tool authorized by agent manifest policy."
 
     async def execute(
         self,
@@ -80,9 +195,9 @@ class AgentRuntime:
     ) -> Dict[str, Any]:
         """
         Execute agent reasoning pipeline:
-        1. Check authority & invoke tools
+        1. Hard authority check & invoke authorized tools
         2. Format prompt with tool outputs and incident data
-        3. Call Gemini (or deterministic fallback)
+        3. Call Gemini 2.5 Flash (or deterministic fallback)
         4. Validate against output_schema
         5. Publish AGENT_COMPLETED / AGENT_INSUFFICIENT event
         """
@@ -90,24 +205,31 @@ class AgentRuntime:
 
         tool_results: Dict[str, Any] = {}
         tool_audit: List[Dict[str, Any]] = []
+        denied_tools: List[Dict[str, Any]] = []
 
-        # ── 1. Tool Execution with Authority Enforcement ───────────────────────
+        # ── 1. Tool Execution with Hard Authority Enforcement ─────────────────
         for tool_name in self.tools:
-            if not self.check_tool_authority(tool_name):
-                logger.warning(f"[{self.agent_id}] UNAUTHORIZED tool attempt: {tool_name}")
+            is_authorized, reason = self.check_tool_authority(tool_name, db=db)
+            if not is_authorized:
+                logger.warning(f"[{self.agent_id}] UNAUTHORIZED tool attempt: {tool_name} — {reason}")
+                denied_tools.append({"tool": tool_name, "reason": reason})
                 if bus:
                     await bus.publish_provenance(
                         event_type="UNAUTHORIZED_TOOL_DENIED",
                         actor=self.agent_id,
-                        message=f"Agent '{self.agent_id}' attempted to access unauthorized tool '{tool_name}'. Blocked by governance.",
-                        payload={"agent_id": self.agent_id, "tool_name": tool_name},
+                        message=f"Agent '{self.agent_id}' attempted to access unauthorized tool '{tool_name}'. Blocked by governance: {reason}",
+                        payload={
+                            "agent_id": self.agent_id,
+                            "tool_name": tool_name,
+                            "reason": reason,
+                            "authority_status": self.authority_status,
+                        },
                         incident_id=incident_id,
                         db=db,
                     )
                 continue
 
             try:
-                # Prepare arguments based on input_data
                 kwargs = self._prepare_tool_kwargs(tool_name, input_data)
                 result = tool_registry.execute(tool_name, **kwargs)
                 tool_results[tool_name] = result
@@ -126,13 +248,17 @@ class AgentRuntime:
                 })
 
         # ── 2. Check for Capability Gap (Act II Trigger) ──────────────────────
-        # If the incident asks for passability and this agent doesn't have flood_passability:
-        is_unknown_incident = input_data.get("incident_type") == "unknown" or "anomaly" in input_data.get("title", "").lower()
-        requires_passability = "passability" in input_data.get("description", "").lower() or "depth" in input_data.get("description", "").lower()
-        
+        is_unknown_incident = (
+            input_data.get("incident_type") == "unknown"
+            or "anomaly" in input_data.get("title", "").lower()
+        )
+        requires_passability = (
+            "passability" in input_data.get("description", "").lower()
+            or "depth" in input_data.get("description", "").lower()
+        )
+
         is_insufficient = False
         if is_unknown_incident and requires_passability and "flood_passability" not in self.capability_ids:
-            # Agent recognizes it lacks the capability
             is_insufficient = True
 
         # ── 3. Gemini Call or Deterministic Fallback ──────────────────────────
@@ -141,7 +267,7 @@ class AgentRuntime:
 
         if settings.gemini_api_key and not settings.gemini_api_key.startswith("your_"):
             try:
-                output = await self._call_gemini(input_data, tool_results, is_insufficient)
+                output = await self._call_gemini(input_data, tool_results, is_insufficient, denied_tools)
                 used_llm = True
             except Exception as e:
                 logger.warning(f"[{self.agent_id}] Gemini call failed ({e}), falling back to deterministic response.")
@@ -154,16 +280,18 @@ class AgentRuntime:
         summary_msg = (
             f"Agent '{self.name}' determined it has INSUFFICIENT capability for this incident."
             if is_insufficient
-            else f"Agent '{self.name}' completed assessment using {len(tool_audit)} tool(s)."
+            else f"Agent '{self.name}' completed assessment using {len([t for t in tool_audit if t.get('status') == 'success'])} tool(s)."
         )
 
         response_payload = {
             "agent_id": self.agent_id,
             "agent_name": self.name,
             "capability_ids": self.capability_ids,
+            "authority_status": self.authority_status,
             "status": "insufficient" if is_insufficient else "completed",
             "output": output,
             "tool_calls": tool_audit,
+            "denied_tools": denied_tools,
             "llm_used": used_llm,
             "timestamp": datetime.utcnow().isoformat(),
         }
@@ -180,6 +308,22 @@ class AgentRuntime:
 
         return response_payload
 
+    @classmethod
+    async def execute_agent(
+        cls,
+        agent: Union[Any, Dict[str, Any]],
+        task: Dict[str, Any],
+        incident_id: Optional[str] = None,
+        bus: Optional[EventBus] = None,
+        db: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """
+        Class-level execution matching the AgentRuntime.execute(agent, task) specification.
+        Instantiates runtime from manifest and executes task.
+        """
+        runtime = cls.from_manifest(agent, db=db)
+        return await runtime.execute(input_data=task, incident_id=incident_id, bus=bus, db=db)
+
     def _prepare_tool_kwargs(self, tool_name: str, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Map incident input fields to tool parameters."""
         location = input_data.get("location", "Zone 4, Chennai")
@@ -193,8 +337,11 @@ class AgentRuntime:
             return {"zone": zone}
         elif tool_name == "road.read":
             road_name = "Mount Road / Anna Salai"
-            if "velachery" in input_data.get("description", "").lower():
+            desc = input_data.get("description", "").lower()
+            if "velachery" in desc:
                 road_name = "Velachery Main Road"
+            elif "main st" in desc or "underpass" in desc:
+                road_name = "Main St Underpass"
             return {"road_name": road_name, "zone": zone}
         elif tool_name == "drainage.read":
             return {"zone": zone}
@@ -209,6 +356,7 @@ class AgentRuntime:
         input_data: Dict[str, Any],
         tool_results: Dict[str, Any],
         is_insufficient: bool,
+        denied_tools: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Call Gemini model with structured output prompt."""
         import google.generativeai as genai
@@ -225,6 +373,9 @@ Incident: {json.dumps(input_data, indent=2)}
 SENSORY / TOOL DATA:
 {json.dumps(tool_results, indent=2)}
 
+GOVERNANCE NOTICES:
+Denied tools: {json.dumps(denied_tools, indent=2)}
+
 CAPABILITY EVALUATION:
 Are your capabilities {self.capability_ids} sufficient to fully resolve this incident?
 {'NOTE: You lack flood_passability. If passability is required, declare INSUFFICIENT.' if is_insufficient else ''}
@@ -237,7 +388,6 @@ Do NOT wrap the JSON in markdown backticks or commentary. Return ONLY the JSON o
 """
         response = await model.generate_content_async(prompt)
         text = response.text.strip()
-        # Clean any accidental markdown fencing
         cleaned = re.sub(r"^```json\s*", "", text)
         cleaned = re.sub(r"\s*```$", "", cleaned).strip()
         return json.loads(cleaned)
@@ -252,7 +402,6 @@ Do NOT wrap the JSON in markdown backticks or commentary. Return ONLY the JSON o
         Deterministic fallback matching the agent's exact output_schema.
         Guarantees 100% demo uptime and exact schema compliance.
         """
-        # Specific fallbacks per agent
         if self.agent_id == "weather-agent":
             w = tool_results.get("weather.read", {})
             return {
@@ -304,7 +453,7 @@ Do NOT wrap the JSON in markdown backticks or commentary. Return ONLY the JSON o
                 ),
                 "priority_zones": e.get("priority_zones", [
                     "Saidapet low-lying riverside settlement",
-                    "Velachery AGS Colony ground floor apartments",
+                    "Velachery harmony low-lying pockets",
                 ]),
                 "recommended_route": e.get(
                     "recommended_primary_route",
@@ -316,6 +465,55 @@ Do NOT wrap the JSON in markdown backticks or commentary. Return ONLY the JSON o
                     "Emergency resources staged at Guindy Hub A. Evacuation units prepared for immediate dispatch."
                 ),
             }
+
+        elif self.agent_id == "passage-agent":
+            road_data = tool_results.get("road.read", {})
+            desc = (input_data.get("description", "") + " " + input_data.get("condition", "")).lower()
+            water_depth = road_data.get("flood_depth_cm") or input_data.get("water_depth_cm") or input_data.get("flood_depth_cm")
+
+            if "clear" in desc or (water_depth is not None and water_depth < 15):
+                return {
+                    "is_passable": True,
+                    "passability_status": "PASSABLE",
+                    "water_depth_cm": float(water_depth if water_depth is not None else 5.0),
+                    "confidence": 0.95,
+                    "recommendation": "Road is clear and passable for all vehicle categories.",
+                }
+            elif "poor visibility" in desc or "obscured" in desc or "murky" in desc:
+                status = "UNKNOWN" if ("safeguard" in self.system_prompt.lower() or "repaired" in self.system_prompt.lower() or "conservative" in self.system_prompt.lower()) else "PASSABLE"
+                return {
+                    "is_passable": status == "PASSABLE",
+                    "passability_status": status,
+                    "water_depth_cm": float(water_depth if water_depth is not None else 25.0),
+                    "confidence": 0.4 if status == "UNKNOWN" else 0.85,
+                    "recommendation": "Visual confirmation obscured. Human inspection required." if status == "UNKNOWN" else "Estimated passable.",
+                }
+            elif "contradictory" in desc:
+                return {
+                    "is_passable": False,
+                    "passability_status": "ESCALATE",
+                    "water_depth_cm": float(water_depth if water_depth is not None else 35.0),
+                    "confidence": 0.5,
+                    "recommendation": "Conflicting sensor data between optical and depth gauge. Escalating to supervisor.",
+                }
+            elif "missing" in desc or (not tool_results and water_depth is None):
+                return {
+                    "is_passable": False,
+                    "passability_status": "UNKNOWN",
+                    "water_depth_cm": 0.0,
+                    "confidence": 0.2,
+                    "recommendation": "Insufficient sensor evidence to verify passability.",
+                }
+            else:
+                depth = float(water_depth if water_depth is not None else 65.0)
+                is_pass = depth < 30.0
+                return {
+                    "is_passable": is_pass,
+                    "passability_status": "PASSABLE" if is_pass else "BLOCKED",
+                    "water_depth_cm": depth,
+                    "confidence": 0.92,
+                    "recommendation": "Route passable for emergency clearance vehicles." if is_pass else f"Route IMPASSABLE. Water depth {depth}cm exceeds safe threshold for civilian vehicles.",
+                }
 
         # Generic schema-filling fallback
         output = {}
@@ -331,3 +529,7 @@ Do NOT wrap the JSON in markdown backticks or commentary. Return ONLY the JSON o
             else:
                 output[prop_name] = f"Assessment from {self.name}"
         return output
+
+
+# Alias for backward compatibility
+AgentRuntime = GenericAgentRuntime

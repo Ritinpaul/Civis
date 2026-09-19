@@ -210,8 +210,9 @@ def seed(db):
 
     # ── Agents + Authority ────────────────────────────────────────────────────
     for agent_data in SEED_AGENTS:
-        allowed_tools = agent_data.pop("allowed_tools")
-        agent = Agent(**agent_data)
+        agent_dict = dict(agent_data)
+        allowed_tools = agent_dict.pop("allowed_tools", [])
+        agent = Agent(**agent_dict)
         db.merge(agent)
 
         # Grant allowed tools

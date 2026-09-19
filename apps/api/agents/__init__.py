@@ -1,4 +1,4 @@
-from agents.runtime import AgentRuntime
+from agents.runtime import AgentRuntime, GenericAgentRuntime
 from agents.weather import WeatherAgent
 from agents.traffic import TrafficAgent
 from agents.infrastructure import InfrastructureAgent
@@ -11,6 +11,7 @@ from agents.workforce_manager import (
 
 __all__ = [
     "AgentRuntime",
+    "GenericAgentRuntime",
     "WeatherAgent",
     "TrafficAgent",
     "InfrastructureAgent",

@@ -13,6 +13,7 @@ from models.agent import Agent
 from models.capability import Capability
 from models.workforce import WorkforceSnapshot
 from services.event_bus import get_event_bus, EventBus
+from agents.runtime import GenericAgentRuntime
 
 router = APIRouter(prefix="/workforce", tags=["Workforce"])
 
@@ -21,6 +22,11 @@ router = APIRouter(prefix="/workforce", tags=["Workforce"])
 class SnapshotCreate(BaseModel):
     trigger: str = Field(..., example="CAPABILITY_PERSISTED")
     version: Optional[int] = None
+
+
+class AgentExecuteRequest(BaseModel):
+    task: dict = Field(..., description="Task input payload (e.g. incident context or test case)")
+    incident_id: Optional[str] = Field(None, description="Optional incident ID for provenance")
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -75,6 +81,31 @@ def get_agent(
     data = agent.to_dict()
     data["manifest"] = agent.to_manifest()
     return data
+
+
+@router.post("/agents/{agent_id}/execute", response_model=dict)
+async def execute_agent(
+    agent_id: str,
+    payload: AgentExecuteRequest,
+    db: Session = Depends(get_db),
+    bus: EventBus = Depends(get_event_bus),
+):
+    """
+    Execute any agent in the workforce (including forged specialists) via GenericAgentRuntime.
+    Enforces hard authority checks against DB authority records.
+    """
+    agent = db.query(Agent).filter(Agent.id == agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent '{agent_id}' not found")
+
+    runtime = GenericAgentRuntime.from_manifest(agent, db=db)
+    result = await runtime.execute(
+        input_data=payload.task,
+        incident_id=payload.incident_id or payload.task.get("id"),
+        bus=bus,
+        db=db,
+    )
+    return result
 
 
 @router.get("/snapshots", response_model=List[dict])
