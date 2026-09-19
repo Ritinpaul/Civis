@@ -93,3 +93,41 @@ async def run_act2(
             "incident_id": "INC-002",
             "message": "Act II started in background. Stream events at /events/stream?incident_id=INC-002",
         }
+
+
+class Act3RunRequest(BaseModel):
+    sync: bool = Field(default=False, description="Whether to wait for completion before returning")
+    delay: Optional[float] = Field(None, description="Pacing delay in seconds between events")
+    incident_id: str = Field(default="INC-002", description="Incident ID to coordinate swarm for")
+
+
+@router.post("/act3", response_model=dict)
+async def run_act3(
+    payload: Optional[Act3RunRequest] = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Trigger Act III: 'The City Adapts — Multi-Agent Swarm'.
+    Coordinates the 5-agent workforce to resolve INC-002.
+    Synthesizes multi-hazard action plan via Gemini 2.5 Flash and resolves incident.
+    """
+    from engines.act3 import Act3Orchestrator, get_act3_orchestrator
+
+    sync_mode = payload.sync if payload else False
+    delay_override = payload.delay if payload else None
+    incident_id = payload.incident_id if payload else "INC-002"
+
+    orchestrator = Act3Orchestrator(delay=delay_override) if delay_override is not None else get_act3_orchestrator()
+
+    if sync_mode:
+        result = await orchestrator.run(incident_id=incident_id, db=db)
+        return {"status": "completed", **result}
+    else:
+        asyncio.create_task(orchestrator.run(incident_id=incident_id))
+        return {
+            "status": "started",
+            "act": "III",
+            "incident_id": incident_id,
+            "message": f"Act III started in background. Stream events at /events/stream?incident_id={incident_id}",
+        }
+

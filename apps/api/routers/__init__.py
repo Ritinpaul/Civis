@@ -7,6 +7,8 @@ from routers.demo import router as demo_router
 from routers.forge import router as forge_router
 from routers.evaluations import router as evaluations_router
 from routers.repair import router as repair_router
+from routers.authority import router as authority_router
+from routers.swarm import router as swarm_router
 
 __all__ = [
     "incidents_router",
@@ -18,4 +20,7 @@ __all__ = [
     "forge_router",
     "evaluations_router",
     "repair_router",
+    "authority_router",
+    "swarm_router",
 ]
+

@@ -40,6 +40,16 @@ from engines.repair import (
     repair_engine,
     get_repair_engine,
 )
+from engines.governance import (
+    GovernanceEngine,
+    governance_engine,
+    get_governance_engine,
+)
+from engines.act3 import (
+    Act3Orchestrator,
+    act3_orchestrator,
+    get_act3_orchestrator,
+)
 
 __all__ = [
     "IntelligenceEngine",
@@ -72,4 +82,11 @@ __all__ = [
     "RepairEngine",
     "repair_engine",
     "get_repair_engine",
+    "GovernanceEngine",
+    "governance_engine",
+    "get_governance_engine",
+    "Act3Orchestrator",
+    "act3_orchestrator",
+    "get_act3_orchestrator",
 ]
+
