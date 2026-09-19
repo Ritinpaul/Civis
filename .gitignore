@@ -22,6 +22,9 @@ build/
 htmlcov/
 .coverage
 *.log
+*.db
+*.sqlite
+*.sqlite3
 
 # Alembic compiled
 alembic/versions/__pycache__/
@@ -51,3 +54,6 @@ evidence/*.json
 
 # AgentVerse reference (local read-only, not committed)
 references/
+
+# Python venv
+apps/api/.venv/

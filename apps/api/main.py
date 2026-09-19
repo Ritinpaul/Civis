@@ -45,10 +45,15 @@ def health():
         "version": "0.1.0",
         "environment": settings.environment,
         "demo_mode": settings.demo_mode,
+        "gemini_fast_model": settings.gemini_fast_model,
+        "gemini_smart_model": settings.gemini_smart_model,
     }
 
 
-# ── Routers added per phase ───────────────────────────────────────────────────
-# Phase 2:  from routers import incidents, capabilities, workforce, events
-# Phase 5:  capabilities router extended
-# Phase 16: from routers import demo
+# ── Routers ───────────────────────────────────────────────────────────────────
+from routers import incidents_router, capabilities_router, workforce_router, events_router
+
+app.include_router(incidents_router)
+app.include_router(capabilities_router)
+app.include_router(workforce_router)
+app.include_router(events_router)

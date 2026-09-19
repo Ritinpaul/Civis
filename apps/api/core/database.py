@@ -8,12 +8,18 @@ from core.settings import get_settings
 
 settings = get_settings()
 
-engine = create_engine(
-    settings.database_url,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-)
+if settings.database_url.startswith("sqlite"):
+    engine = create_engine(
+        settings.database_url,
+        connect_args={"check_same_thread": False},
+    )
+else:
+    engine = create_engine(
+        settings.database_url,
+        pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=10,
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -30,3 +36,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def init_db(bind=engine):
+    """Create all tables in the database if they do not exist."""
+    import models  # Ensure all models are registered with Base.metadata
+    Base.metadata.create_all(bind=bind)
