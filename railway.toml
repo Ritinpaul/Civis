@@ -1,0 +1,16 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "alembic upgrade head && python -m scripts.seed && uvicorn main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+
+[[services]]
+name = "civis-api"
+
+[services.variables]
+PORT = "8000"
+ENVIRONMENT = "production"
+DEMO_MODE = "true"

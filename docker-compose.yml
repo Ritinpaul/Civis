@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: civis-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: civis
+      POSTGRES_PASSWORD: civis
+      POSTGRES_DB: civis
+    ports:
+      - "5432:5432"
+    volumes:
+      - civis_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U civis -d civis"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: civis-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://civis:civis@db:5432/civis
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_FAST_MODEL: ${GEMINI_FAST_MODEL:-gemini-2.5-flash}
+      GEMINI_SMART_MODEL: ${GEMINI_SMART_MODEL:-gemini-2.5-pro}
+      ENVIRONMENT: development
+      DEMO_MODE: ${DEMO_MODE:-true}
+      ALLOWED_ORIGINS: "http://localhost:3000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app
+    command: >
+      sh -c "alembic upgrade head && python -m scripts.seed && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  civis_pgdata:
