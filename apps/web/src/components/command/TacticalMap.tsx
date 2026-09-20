@@ -2,143 +2,81 @@
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useDemo } from '@/lib/store';
-import { geoMercator, geoPath } from 'd3-geo';
-import * as topojson from 'topojson-client';
-import worldData from 'world-atlas/countries-110m.json';
+import { geoMercator } from 'd3-geo';
 import {
-  Plus,
-  Minus,
-  RotateCcw,
-  Plane,
-  Compass,
-  MapPin,
-  Sparkles,
-  Radio,
-} from 'lucide-react';
+  PlusIcon,
+  MinusIcon,
+  ResetIcon,
+  DrawingPinIcon,
+  TargetIcon,
+  ExclamationTriangleIcon,
+  CheckCircledIcon,
+} from '@radix-ui/react-icons';
 
 interface TacticalMapProps {
   selectedSectorId: string;
   onSelectSector: (id: string) => void;
 }
 
-interface MapNode {
+interface CivicNode {
   id: string;
   name: string;
-  city: string;
-  country: string;
+  tagTitle: string;
+  tagSubtitle: string;
   coords: [number, number]; // [lng, lat]
-  role: 'origin' | 'transit' | 'dest' | 'hub';
-  tag?: string;
-  isCallout?: boolean;
+  role: 'origin' | 'transit' | 'hazard' | 'infra';
+  isHazard?: boolean;
 }
 
-const GLOBAL_NODES: MapNode[] = [
+const CHENNAI_ZONE4_NODES: CivicNode[] = [
   {
-    id: 'SIN',
-    name: 'Singapore Changi International',
-    city: 'Singapore',
-    country: 'Singapore',
-    coords: [103.8198, 1.3521],
+    id: 'guindy-hub',
+    name: 'Guindy Race Course Staging Hub A',
+    tagTitle: 'From  Guindy Staging Hub A',
+    tagSubtitle: '4 ALS 4x4 Ambulances • 3 Boats',
+    coords: [80.2080, 13.0035],
     role: 'origin',
-    tag: 'From  Singapore, Singapore',
-    isCallout: true,
   },
   {
-    id: 'VIE',
-    name: 'Vienna / Austria Transit Hub',
-    city: 'Vienna',
-    country: 'Austria',
-    coords: [16.3738, 48.2082],
+    id: 'kathipara-gate',
+    name: 'Kathipara Traffic Diversion Gate',
+    tagTitle: 'Transit  Kathipara Bypass',
+    tagSubtitle: 'Hard Barrier • Sedans Diverted',
+    coords: [80.2067, 13.0078],
     role: 'transit',
-    tag: 'Transit  Austria',
-    isCallout: true,
   },
   {
-    id: 'LAX',
-    name: 'Los Angeles International',
-    city: 'Los Angeles',
-    country: 'USA',
-    coords: [-118.2437, 34.0522],
-    role: 'dest',
-    tag: 'Dest  Los Angeles, USA',
-    isCallout: true,
+    id: 'pier-4',
+    name: 'Pier 4 Arterial Bridge (Saidapet Causeway)',
+    tagTitle: 'Dest  Pier 4 Arterial Bridge',
+    tagSubtitle: 'Water: 68cm • 1.8 m/s Current',
+    coords: [80.2201, 13.0152],
+    role: 'hazard',
+    isHazard: true,
   },
   {
-    id: 'JED',
-    name: 'King Abdulaziz International',
-    city: 'Jeddah',
-    country: 'Saudi Arabia',
-    coords: [39.1925, 21.4858],
-    role: 'hub',
+    id: 'saidapet-pump',
+    name: 'Saidapet Stormwater Pumping Station',
+    tagTitle: 'Hydro  Saidapet Pumps',
+    tagSubtitle: '12,000 LPM • 124% Overload',
+    coords: [80.2255, 13.0185],
+    role: 'infra',
   },
   {
-    id: 'DXB',
-    name: 'Dubai International',
-    city: 'Dubai',
-    country: 'UAE',
-    coords: [55.2708, 25.2048],
-    role: 'hub',
-  },
-  {
-    id: 'HND',
-    name: 'Tokyo Haneda',
-    city: 'Tokyo',
-    country: 'Japan',
-    coords: [139.6917, 35.6895],
-    role: 'hub',
-  },
-  {
-    id: 'CDG',
-    name: 'Paris Charles de Gaulle',
-    city: 'Paris',
-    country: 'France',
-    coords: [2.3522, 48.8566],
-    role: 'hub',
-  },
-  {
-    id: 'LHR',
-    name: 'London Heathrow',
-    city: 'London',
-    country: 'UK',
-    coords: [-0.1278, 51.5074],
-    role: 'hub',
-  },
-  {
-    id: 'NYC',
-    name: 'John F. Kennedy International',
-    city: 'New York',
-    country: 'USA',
-    coords: [-74.0060, 40.7128],
-    role: 'hub',
-  },
-  {
-    id: 'SAO',
-    name: 'São Paulo–Guarulhos',
-    city: 'São Paulo',
-    country: 'Brazil',
-    coords: [-46.6333, -23.5505],
-    role: 'hub',
-  },
-  {
-    id: 'SYD',
-    name: 'Sydney Kingsford Smith',
-    city: 'Sydney',
-    country: 'Australia',
-    coords: [151.2093, -33.8688],
-    role: 'hub',
-  },
-  {
-    id: 'CHN',
-    name: 'Chennai International / CIVIS Ground Zero',
-    city: 'Chennai',
-    country: 'India',
-    coords: [80.2707, 13.0827],
-    role: 'hub',
+    id: 'velachery-outfall',
+    name: 'Velachery Canal Outfall & AGS Colony',
+    tagTitle: 'Outfall  Velachery Canal',
+    tagSubtitle: 'High Tide Backflow Guard',
+    coords: [80.2240, 12.9850],
+    role: 'infra',
   },
 ];
 
 export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapProps) {
+  const { metrics } = useDemo();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const isResolved = metrics.activeIncidents === 0;
 
   // Viewport dimensions
   const width = 940;
@@ -148,36 +86,30 @@ export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapPro
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [flightProgress, setFlightProgress] = useState(0.48); // Near Austria!
+  const [vehicleProgress, setVehicleProgress] = useState(0.42);
 
-  // Animate the airplane moving along the flight trajectory
+  // Animate the ALS emergency vehicle moving along the detour trajectory
   useEffect(() => {
     let animId: number;
     const animate = () => {
-      setFlightProgress((prev) => (prev >= 1 ? 0 : prev + 0.0008));
+      setVehicleProgress((prev) => (prev >= 1 ? 0 : prev + 0.0012));
       animId = requestAnimationFrame(animate);
     };
     animId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  // ── D3 Mercator Projection calibrated to World Map (Matching Reference) ──
+  // Precision D3 Mercator Projection calibrated specifically to Chennai Zone 4
   const projection = useMemo(() => {
     return geoMercator()
-      .scale(145)
-      .translate([width / 2, height / 2 + 35]);
+      .center([80.226, 13.010])
+      .scale(460000)
+      .translate([width / 2 - 20, height / 2]);
   }, [width, height]);
 
-  // Generate World Land Vector Path
-  const worldLandPath = useMemo(() => {
-    const pathGenerator = geoPath(projection);
-    const landFeature = topojson.feature(worldData as any, (worldData as any).objects.land);
-    return pathGenerator(landFeature) || '';
-  }, [projection]);
-
-  // Project all city nodes
+  // Project all civic nodes
   const projectedNodes = useMemo(() => {
-    return GLOBAL_NODES.map((node) => {
+    return CHENNAI_ZONE4_NODES.map((node) => {
       const pos = projection(node.coords) || [0, 0];
       return {
         ...node,
@@ -187,83 +119,140 @@ export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapPro
     });
   }, [projection]);
 
-  // ── Trajectory Curve (Singapore ➔ Austria ➔ Los Angeles) matching Reference ──
-  const trajectory = useMemo(() => {
-    const pSin = projection([103.8198, 1.3521]) || [0, 0];
-    const pVie = projection([16.3738, 48.2082]) || [0, 0];
-    const pLax = projection([-118.2437, 34.0522]) || [0, 0];
+  // Geographic Landmark Features
+  const mapFeatures = useMemo(() => {
+    // 1. Adyar River Channel Coordinates
+    const adyarRiverCoords: [number, number][] = [
+      [80.1860, 13.0070],
+      [80.1940, 13.0085],
+      [80.2030, 13.0105],
+      [80.2110, 13.0125],
+      [80.2201, 13.0150],
+      [80.2280, 13.0175],
+      [80.2370, 13.0170],
+      [80.2470, 13.0140],
+      [80.2540, 13.0115],
+      [80.2640, 13.0080],
+    ];
 
-    // Smooth cubic bezier arc: Singapore ➔ high arc over Eurasia ➔ Austria ➔ Atlantic arc ➔ Los Angeles
-    // Segment 1: Singapore to Austria
-    const cp1X = (pSin[0] + pVie[0]) / 2 + 40;
-    const cp1Y = Math.min(pSin[1], pVie[1]) - 70;
+    const riverPoints = adyarRiverCoords.map((c) => projection(c) || [0, 0]);
+    let riverPathD = `M ${riverPoints[0][0]} ${riverPoints[0][1]}`;
+    for (let i = 1; i < riverPoints.length; i++) {
+      const pPrev = riverPoints[i - 1];
+      const pCurr = riverPoints[i];
+      const cpX = (pPrev[0] + pCurr[0]) / 2;
+      const cpY = (pPrev[1] + pCurr[1]) / 2;
+      riverPathD += ` Q ${pPrev[0]} ${pPrev[1]} ${cpX} ${cpY} T ${pCurr[0]} ${pCurr[1]}`;
+    }
 
-    // Segment 2: Austria to Los Angeles (crossing Atlantic & North America)
-    const cp2X = (pVie[0] + pLax[0]) / 2 - 30;
-    const cp2Y = Math.min(pVie[1], pLax[1]) - 110;
+    // 2. Bay of Bengal Coastline (Eastern Boundary)
+    const coastlineCoords: [number, number][] = [
+      [80.2660, 13.0450],
+      [80.2650, 13.0300],
+      [80.2640, 13.0180],
+      [80.2640, 13.0080],
+      [80.2635, 12.9980],
+      [80.2630, 12.9800],
+    ];
+    const coastPoints = coastlineCoords.map((c) => projection(c) || [0, 0]);
+    let coastPathD = `M ${coastPoints[0][0]} ${coastPoints[0][1]}`;
+    for (let i = 1; i < coastPoints.length; i++) {
+      coastPathD += ` L ${coastPoints[i][0]} ${coastPoints[i][1]}`;
+    }
 
-    const pathD = `M ${pSin[0]} ${pSin[1]} Q ${cp1X} ${cp1Y} ${pVie[0]} ${pVie[1]} Q ${cp2X} ${cp2Y} ${pLax[0]} ${pLax[1]}`;
+    // 3. Flood Inundation Polygon (3.42 sq km Adyar Floodplain)
+    const floodPolygonCoords: [number, number][] = [
+      [80.2140, 13.0120],
+      [80.2170, 13.0160],
+      [80.2201, 13.0185],
+      [80.2260, 13.0205],
+      [80.2310, 13.0180],
+      [80.2270, 13.0135],
+      [80.2200, 13.0115],
+    ];
+    const floodPoints = floodPolygonCoords.map((c) => projection(c) || [0, 0]);
+    const floodPathD = `M ${floodPoints.map((p) => `${p[0]} ${p[1]}`).join(' L ')} Z`;
 
-    // Secondary flight path 2: Tokyo to Paris (UJ3958271ZX)
-    const pHnd = projection([139.6917, 35.6895]) || [0, 0];
-    const pCdg = projection([2.3522, 48.8566]) || [0, 0];
-    const cpTokyoParisX = (pHnd[0] + pCdg[0]) / 2;
-    const cpTokyoParisY = Math.min(pHnd[1], pCdg[1]) - 90;
-    const pathTokyoParis = `M ${pHnd[0]} ${pHnd[1]} Q ${cpTokyoParisX} ${cpTokyoParisY} ${pCdg[0]} ${pCdg[1]}`;
+    // 4. Mount Road / Anna Salai
+    const mountRoadCoords: [number, number][] = [
+      [80.2030, 13.0040],
+      [80.2067, 13.0078],
+      [80.2130, 13.0115],
+      [80.2201, 13.0152],
+      [80.2280, 13.0210],
+      [80.2360, 13.0280],
+    ];
+    const mountRoadPoints = mountRoadCoords.map((c) => projection(c) || [0, 0]);
+    const mountRoadD = `M ${mountRoadPoints.map((p) => `${p[0]} ${p[1]}`).join(' L ')}`;
 
-    // Secondary flight path 3: Singapore to London (GV7829105LK)
-    const pLhr = projection([-0.1278, 51.5074]) || [0, 0];
-    const cpSinLhrX = (pSin[0] + pLhr[0]) / 2 + 20;
-    const cpSinLhrY = Math.min(pSin[1], pLhr[1]) - 80;
-    const pathSinLondon = `M ${pSin[0]} ${pSin[1]} Q ${cpSinLhrX} ${cpSinLhrY} ${pLhr[0]} ${pLhr[1]}`;
+    // Submerged hazard section on Mount Road around Pier 4
+    const submergedStart = projection([80.2165, 13.0135]) || [0, 0];
+    const submergedMid = projection([80.2201, 13.0152]) || [0, 0];
+    const submergedEnd = projection([80.2235, 13.0175]) || [0, 0];
+    const submergedD = `M ${submergedStart[0]} ${submergedStart[1]} L ${submergedMid[0]} ${submergedMid[1]} L ${submergedEnd[0]} ${submergedEnd[1]}`;
+
+    // 5. Emergency Detour Trajectory
+    const detourCoords: [number, number][] = [
+      [80.2080, 13.0035], // Guindy Staging Hub A (Origin)
+      [80.2067, 13.0078], // Kathipara Traffic Gate
+      [80.2045, 13.0150], // Inner Ring Road Northbound
+      [80.2060, 13.0220], // Jafferkhanpet Bypass
+      [80.2120, 13.0235], // High Elevation Bypass Crossing
+      [80.2175, 13.0195], // Saidapet West Approach
+      [80.2201, 13.0152], // Pier 4 Arterial Bridge (Destination)
+    ];
+    const detourPoints = detourCoords.map((c) => projection(c) || [0, 0]);
+    let detourD = `M ${detourPoints[0][0]} ${detourPoints[0][1]}`;
+    for (let i = 1; i < detourPoints.length; i++) {
+      const pPrev = detourPoints[i - 1];
+      const pCurr = detourPoints[i];
+      const cpX = (pPrev[0] + pCurr[0]) / 2;
+      const cpY = (pPrev[1] + pCurr[1]) / 2;
+      detourD += ` Q ${pPrev[0]} ${pPrev[1]} ${cpX} ${cpY} T ${pCurr[0]} ${pCurr[1]}`;
+    }
 
     return {
-      pathD,
-      pathTokyoParis,
-      pathSinLondon,
-      pSin,
-      pVie,
-      pLax,
-      cp1X,
-      cp1Y,
-      cp2X,
-      cp2Y,
+      riverPathD,
+      coastPathD,
+      coastPoints,
+      floodPathD,
+      mountRoadD,
+      submergedD,
+      detourD,
+      detourPoints,
     };
   }, [projection]);
 
-  // Calculate current airplane position and angle along the curve
-  const currentPlanePos = useMemo(() => {
-    const { pSin, pVie, pLax, cp1X, cp1Y, cp2X, cp2Y } = trajectory;
+  // Position of the ALS 4x4 Emergency vehicle along the detour
+  const currentVehiclePos = useMemo(() => {
+    const pts = mapFeatures.detourPoints;
+    if (pts.length < 2) return { x: 0, y: 0, angle: 0 };
 
-    let x = 0;
-    let y = 0;
-    let dx = 0;
-    let dy = 0;
+    const totalSegs = pts.length - 1;
+    const scaledT = vehicleProgress * totalSegs;
+    const segIndex = Math.min(Math.floor(scaledT), totalSegs - 1);
+    const segT = scaledT - segIndex;
 
-    if (flightProgress < 0.5) {
-      // First segment: Singapore ➔ Austria
-      const t = flightProgress * 2;
-      x = (1 - t) * (1 - t) * pSin[0] + 2 * (1 - t) * t * cp1X + t * t * pVie[0];
-      y = (1 - t) * (1 - t) * pSin[1] + 2 * (1 - t) * t * cp1Y + t * t * pVie[1];
-      dx = 2 * (1 - t) * (cp1X - pSin[0]) + 2 * t * (pVie[0] - cp1X);
-      dy = 2 * (1 - t) * (cp1Y - pSin[1]) + 2 * t * (pVie[1] - cp1Y);
-    } else {
-      // Second segment: Austria ➔ Los Angeles
-      const t = (flightProgress - 0.5) * 2;
-      x = (1 - t) * (1 - t) * pVie[0] + 2 * (1 - t) * t * cp2X + t * t * pLax[0];
-      y = (1 - t) * (1 - t) * pVie[1] + 2 * (1 - t) * t * cp2Y + t * t * pLax[1];
-      dx = 2 * (1 - t) * (cp2X - pVie[0]) + 2 * t * (pLax[0] - cp2X);
-      dy = 2 * (1 - t) * (cp2Y - pVie[1]) + 2 * t * (pLax[1] - cp2Y);
-    }
+    const pA = pts[segIndex];
+    const pB = pts[segIndex + 1];
 
+    const cpX = (pA[0] + pB[0]) / 2;
+    const cpY = (pA[1] + pB[1]) / 2;
+
+    const x = (1 - segT) * (1 - segT) * pA[0] + 2 * (1 - segT) * segT * cpX + segT * segT * pB[0];
+    const y = (1 - segT) * (1 - segT) * pA[1] + 2 * (1 - segT) * segT * cpY + segT * segT * pB[1];
+
+    const dx = 2 * (1 - segT) * (cpX - pA[0]) + 2 * segT * (pB[0] - cpX);
+    const dy = 2 * (1 - segT) * (cpY - pA[1]) + 2 * segT * (pB[1] - cpY);
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+
     return { x, y, angle };
-  }, [trajectory, flightProgress]);
+  }, [mapFeatures.detourPoints, vehicleProgress]);
 
   // Center-anchored Zoom Function
   const applyZoom = (factor: number) => {
     setTransform((prev) => {
-      const newK = Math.max(0.8, Math.min(prev.k * factor, 3.5));
+      const newK = Math.max(0.75, Math.min(prev.k * factor, 4.0));
       const newX = width / 2 - (width / 2 - prev.x) * (newK / prev.k);
       const newY = height / 2 - (height / 2 - prev.y) * (newK / prev.k);
       return { x: newX, y: newY, k: newK };
@@ -293,7 +282,7 @@ export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapPro
     applyZoom(factor);
   };
 
-  const resetView = () => {
+  const resetToBasin = () => {
     setTransform({ x: 0, y: 0, k: 1 });
   };
 
@@ -305,122 +294,189 @@ export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapPro
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onWheel={handleWheel}
-      className="relative w-full h-full min-h-[350px] rounded-2xl bg-[#080A0F] border border-white/[0.08] overflow-hidden shadow-2xl select-none flex flex-col cursor-grab active:cursor-grabbing"
+      className="relative w-full h-full min-h-[350px] rounded-2xl bg-[#080A0F] border border-white/[0.08] overflow-hidden shadow-2xl select-none flex flex-col cursor-grab active:cursor-grabbing font-sans"
     >
-      {/* SVG Canvas (World Dot-Matrix Map matching Reference Image) */}
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
         <defs>
-          {/* 1. Tactical Crosshair Grid (Matching Reference Image) */}
-          <pattern id="tacticalGrid" width="60" height="60" patternUnits="userSpaceOnUse">
+          {/* Tactical Crosshair Grid */}
+          <pattern id="tacticalCrossGrid" width="60" height="60" patternUnits="userSpaceOnUse">
             <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255, 255, 255, 0.03)" strokeWidth="1" />
             <line x1="27" y1="30" x2="33" y2="30" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="1" />
             <line x1="30" y1="27" x2="30" y2="33" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="1" />
           </pattern>
 
-          {/* 2. World Dot-Matrix / Stippled Continent Pattern (Matching Reference Image) */}
-          <pattern id="worldDotMatrix" width="5" height="5" patternUnits="userSpaceOnUse">
-            <circle cx="2.5" cy="2.5" r="0.9" fill="rgba(255, 255, 255, 0.28)" />
+          {/* Stippled Dot Matrix Pattern for Urban Landmass */}
+          <pattern id="urbanDotMatrix" width="5" height="5" patternUnits="userSpaceOnUse">
+            <circle cx="2.5" cy="2.5" r="0.8" fill="rgba(255, 255, 255, 0.14)" />
           </pattern>
 
-          {/* Glowing Filters */}
-          <filter id="nodeGlow" x="-50%" y="-50%" width="200%" height="200%">
+          {/* Flood Inundation Diagonal Hatching */}
+          <pattern id="floodHatchPattern" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+            <line
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="8"
+              stroke={isResolved ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.35)'}
+              strokeWidth="2.5"
+            />
+          </pattern>
+
+          {/* Filters */}
+          <filter id="nodeHaloGlow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3.5" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
-
-          <filter id="arcGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <filter id="trajectoryGlow" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="2.5" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
         </defs>
 
-        {/* Deep Space / Dark Radar Background */}
+        {/* Background Grid */}
         <rect width={width} height={height} fill="#080A0F" />
-        <rect width={width} height={height} fill="url(#tacticalGrid)" />
+        <rect width={width} height={height} fill="url(#tacticalCrossGrid)" />
 
-        {/* Pan and Zoom Container Group */}
+        {/* Pan and Zoom Group */}
         <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.k})`}>
-          {/* ── 1. The Continents in Stippled Dot-Matrix Pattern ── */}
+          {/* 1. Base Urban Landmass in Stippled Dot-Matrix */}
+          <rect x="0" y="0" width={width * 1.5} height={height * 1.5} fill="#0A0C14" />
+          <rect x="0" y="0" width={width * 1.5} height={height * 1.5} fill="url(#urbanDotMatrix)" />
+
+          {/* 2. Bay of Bengal Oceanic Zone */}
+          <path
+            d={`${mapFeatures.coastPathD} L ${width * 1.5} ${mapFeatures.coastPoints[mapFeatures.coastPoints.length - 1][1]} L ${width * 1.5} 0 Z`}
+            fill="#080F1D"
+            stroke="#1E3A8A"
+            strokeWidth="1.2"
+            strokeDasharray="4 3"
+          />
+          <text
+            x={mapFeatures.coastPoints[2][0] + 45}
+            y="180"
+            transform={`rotate(90 ${mapFeatures.coastPoints[2][0] + 45} 180)`}
+            fill="#38BDF8"
+            fontSize="10"
+            fontFamily="monospace"
+            letterSpacing="4"
+            opacity="0.5"
+          >
+            BAY OF BENGAL
+          </text>
+
+          {/* 3. Adyar River Channel */}
           <g>
-            {/* Base continent shape filled with high-density stippled dots */}
             <path
-              d={worldLandPath}
-              fill="url(#worldDotMatrix)"
-              stroke="rgba(255, 255, 255, 0.16)"
-              strokeWidth="0.85"
-            />
-            {/* Faint glowing contour line for continent borders */}
-            <path
-              d={worldLandPath}
+              d={mapFeatures.riverPathD}
               fill="none"
-              stroke="rgba(255, 255, 255, 0.08)"
-              strokeWidth="1.6"
-              filter="url(#arcGlow)"
+              stroke="#0284C7"
+              strokeWidth="16"
+              strokeOpacity="0.25"
+              filter="url(#trajectoryGlow)"
+            />
+            <path
+              d={mapFeatures.riverPathD}
+              fill="none"
+              stroke="#0EA5E9"
+              strokeWidth="9"
+              strokeLinecap="round"
+            />
+            <path
+              d={mapFeatures.riverPathD}
+              fill="none"
+              stroke="#BAE6FD"
+              strokeWidth="1.8"
+              strokeDasharray="12 8"
+              strokeOpacity="0.75"
+              className="animate-pulse"
             />
           </g>
 
-          {/* ── 2. Secondary Flight Trajectories (Dashed, faint, elegant) ── */}
-          <path
-            d={trajectory.pathTokyoParis}
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.12)"
-            strokeWidth="1.2"
-            strokeDasharray="4 4"
-          />
-          <path
-            d={trajectory.pathSinLondon}
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.12)"
-            strokeWidth="1.2"
-            strokeDasharray="4 4"
-          />
-
-          {/* ── 3. Primary Glowing Flight Arc (Singapore ➔ Austria ➔ Los Angeles) ── */}
+          {/* 4. Flood Inundation Hazard Polygon */}
           <g>
-            {/* Outer soft glow line */}
             <path
-              d={trajectory.pathD}
-              fill="none"
-              stroke="rgba(255, 255, 255, 0.25)"
-              strokeWidth="4"
-              filter="url(#arcGlow)"
+              d={mapFeatures.floodPathD}
+              fill="url(#floodHatchPattern)"
+              stroke={isResolved ? '#10B981' : '#EF4444'}
+              strokeWidth="1.6"
+              strokeDasharray="5 3"
+              className={!isResolved ? 'animate-pulse' : ''}
             />
-            {/* Main elegant white flight path */}
+          </g>
+
+          {/* 5. Mount Road / Anna Salai */}
+          <g>
             <path
-              d={trajectory.pathD}
+              d={mapFeatures.mountRoadD}
+              fill="none"
+              stroke="#27272A"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            {/* Submerged section */}
+            <path
+              d={mapFeatures.submergedD}
+              fill="none"
+              stroke={isResolved ? '#10B981' : '#EF4444'}
+              strokeWidth="5"
+              strokeDasharray="5 3"
+              filter="url(#trajectoryGlow)"
+              className={!isResolved ? 'animate-pulse' : ''}
+            />
+          </g>
+
+          {/* 6. Emergency Detour Trajectory Arc */}
+          <g>
+            {/* Soft outer glow */}
+            <path
+              d={mapFeatures.detourD}
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.2)"
+              strokeWidth="5"
+              filter="url(#trajectoryGlow)"
+            />
+            {/* Main white route arc */}
+            <path
+              d={mapFeatures.detourD}
               fill="none"
               stroke="#FFFFFF"
-              strokeWidth="1.6"
-              strokeOpacity="0.85"
+              strokeWidth="1.8"
+              strokeOpacity="0.9"
             />
-            {/* Animated dotted pulse stream */}
+            {/* Dotted animation */}
             <path
-              d={trajectory.pathD}
+              d={mapFeatures.detourD}
               fill="none"
-              stroke="rgba(255, 255, 255, 0.7)"
-              strokeWidth="1.6"
-              strokeDasharray="5 7"
+              stroke="rgba(255, 255, 255, 0.75)"
+              strokeWidth="1.8"
+              strokeDasharray="6 6"
               className="animate-edge-flow"
             />
+
+            {/* Moving Emergency Vehicle Icon */}
+            <g
+              transform={`translate(${currentVehiclePos.x}, ${currentVehiclePos.y}) rotate(${currentVehiclePos.angle})`}
+              className="filter drop-shadow-[0_0_8px_rgba(234,179,8,0.7)] cursor-pointer"
+            >
+              <rect
+                x="-9"
+                y="-6"
+                width="18"
+                height="12"
+                rx="3"
+                fill="#0B0D13"
+                stroke="#EAB308"
+                strokeWidth="1.8"
+              />
+              <circle cx="-3" cy="0" r="2" fill="#EAB308" />
+              <circle cx="4" cy="0" r="2" fill="#EAB308" />
+            </g>
           </g>
 
-          {/* ── 4. Flying Bright Yellow Airplane Icon (Matching Reference Image) ── */}
-          <g
-            transform={`translate(${currentPlanePos.x}, ${currentPlanePos.y}) rotate(${currentPlanePos.angle})`}
-            className="filter drop-shadow-[0_0_8px_rgba(234,179,8,0.7)] cursor-pointer"
-          >
-            {/* Yellow Airplane SVG */}
-            <path
-              d="M 10 0 L -4 -9 L -2 -3 L -10 -4 L -11 -2 L -8 0 L -11 2 L -10 4 L -2 3 L -4 9 Z"
-              fill="#EAB308"
-              stroke="#FACC15"
-              strokeWidth="0.8"
-            />
-          </g>
-
-          {/* ── 5. Circular City Nodes with Radial Glow Rings (Matching Reference) ── */}
+          {/* 7. Circular City / Sector Nodes & Frosted Callouts */}
           {projectedNodes.map((node) => {
-            const isCallout = node.isCallout;
+            const isSelected = selectedSectorId === node.id;
+            const isHazard = node.isHazard;
 
             return (
               <g
@@ -433,83 +489,87 @@ export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapPro
                 <circle
                   cx="0"
                   cy="0"
-                  r={isCallout ? '11' : '8'}
-                  fill="rgba(255, 255, 255, 0.15)"
-                  filter="url(#nodeGlow)"
+                  r={isHazard ? '14' : '10'}
+                  fill={
+                    isHazard
+                      ? isResolved
+                        ? 'rgba(16, 185, 129, 0.2)'
+                        : 'rgba(239, 68, 68, 0.25)'
+                      : 'rgba(255, 255, 255, 0.15)'
+                  }
+                  filter="url(#nodeHaloGlow)"
+                  className={isHazard && !isResolved ? 'animate-ping' : ''}
                 />
-                {/* Solid white circular node (Matching Reference White Dots) */}
+                {/* Solid circular node */}
                 <circle
                   cx="0"
                   cy="0"
-                  r={isCallout ? '4.5' : '3'}
+                  r={isHazard ? '5.5' : '4'}
                   fill="#FFFFFF"
                   stroke="#080A0F"
                   strokeWidth="1.2"
                 />
 
-                {/* ── 6. Floating Frosted Glass Callouts (Matching Reference Image) ── */}
-                {/* 6A: "Dest Los Angeles, USA" */}
-                {node.id === 'LAX' && (
-                  <g transform="translate(-148, -32)">
+                {/* Floating Frosted Glass Callout Pills */}
+                {node.id === 'pier-4' && (
+                  <g transform="translate(-215, -34)">
                     <rect
                       x="0"
                       y="0"
-                      width="142"
-                      height="24"
-                      rx="12"
-                      fill="rgba(12, 14, 20, 0.88)"
-                      stroke="rgba(255, 255, 255, 0.15)"
+                      width="210"
+                      height="26"
+                      rx="13"
+                      fill="rgba(12, 14, 20, 0.9)"
+                      stroke={isResolved ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}
                       strokeWidth="1"
                     />
-                    <text x="12" y="15" fill="#FFFFFF" fontSize="9.5" fontFamily="sans-serif" fontWeight="bold">
+                    <text x="12" y="16" fill={isResolved ? '#10B981' : '#EF4444'} fontSize="10" fontFamily="sans-serif" fontWeight="bold">
                       Dest
                     </text>
-                    <text x="38" y="15" fill="#D4D4D8" fontSize="9.5" fontFamily="sans-serif">
-                      Los Angeles, USA
+                    <text x="42" y="16" fill="#EDEDEF" fontSize="10" fontFamily="sans-serif">
+                      Pier 4 Arterial Bridge
                     </text>
                   </g>
                 )}
 
-                {/* 6B: "Transit Austria" (Near the yellow plane in Europe) */}
-                {node.id === 'VIE' && (
-                  <g transform="translate(-40, -32)">
-                    <rect
-                      x="0"
-                      y="0"
-                      width="106"
-                      height="24"
-                      rx="12"
-                      fill="rgba(12, 14, 20, 0.88)"
-                      stroke="rgba(255, 255, 255, 0.15)"
-                      strokeWidth="1"
-                    />
-                    <text x="12" y="15" fill="#FFFFFF" fontSize="9.5" fontFamily="sans-serif" fontWeight="bold">
-                      Transit
-                    </text>
-                    <text x="50" y="15" fill="#D4D4D8" fontSize="9.5" fontFamily="sans-serif">
-                      Austria
-                    </text>
-                  </g>
-                )}
-
-                {/* 6C: "From Singapore, Singapore" */}
-                {node.id === 'SIN' && (
+                {node.id === 'kathipara-gate' && (
                   <g transform="translate(-165, 14)">
                     <rect
                       x="0"
                       y="0"
-                      width="158"
-                      height="24"
-                      rx="12"
-                      fill="rgba(12, 14, 20, 0.88)"
+                      width="160"
+                      height="26"
+                      rx="13"
+                      fill="rgba(12, 14, 20, 0.9)"
                       stroke="rgba(255, 255, 255, 0.15)"
                       strokeWidth="1"
                     />
-                    <text x="12" y="15" fill="#FFFFFF" fontSize="9.5" fontFamily="sans-serif" fontWeight="bold">
+                    <text x="12" y="16" fill="#FFFFFF" fontSize="10" fontFamily="sans-serif" fontWeight="bold">
+                      Transit
+                    </text>
+                    <text x="56" y="16" fill="#D4D4D8" fontSize="10" fontFamily="sans-serif">
+                      Kathipara Bypass
+                    </text>
+                  </g>
+                )}
+
+                {node.id === 'guindy-hub' && (
+                  <g transform="translate(-185, 16)">
+                    <rect
+                      x="0"
+                      y="0"
+                      width="180"
+                      height="26"
+                      rx="13"
+                      fill="rgba(12, 14, 20, 0.9)"
+                      stroke="rgba(255, 255, 255, 0.15)"
+                      strokeWidth="1"
+                    />
+                    <text x="12" y="16" fill="#FFFFFF" fontSize="10" fontFamily="sans-serif" fontWeight="bold">
                       From
                     </text>
-                    <text x="44" y="15" fill="#D4D4D8" fontSize="9.5" fontFamily="sans-serif">
-                      Singapore, Singapore
+                    <text x="48" y="16" fill="#D4D4D8" fontSize="10" fontFamily="sans-serif">
+                      Guindy Staging Hub A
                     </text>
                   </g>
                 )}
@@ -519,41 +579,41 @@ export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapPro
         </g>
       </svg>
 
-      {/* Center-Anchored Floating Zoom Controls (Bottom Left) */}
+      {/* Floating Center-Anchored Zoom Controls (Bottom Left) */}
       <div className="absolute bottom-4 left-4 flex items-center gap-1.5 bg-[#0C0E15]/90 backdrop-blur-md p-1.5 rounded-xl border border-white/[0.08] z-20 shadow-xl">
         <button
           onClick={() => applyZoom(1.25)}
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-[#EDEDEF] hover:bg-white/10 transition-colors text-xs font-bold"
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-[#EDEDEF] hover:bg-white/10 transition-colors"
           title="Zoom In"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <PlusIcon className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => applyZoom(0.8)}
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-[#EDEDEF] hover:bg-white/10 transition-colors text-xs font-bold"
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-[#EDEDEF] hover:bg-white/10 transition-colors"
           title="Zoom Out"
         >
-          <Minus className="w-3.5 h-3.5" />
+          <MinusIcon className="w-3.5 h-3.5" />
         </button>
         <button
-          onClick={resetView}
+          onClick={resetToBasin}
           className="w-7 h-7 flex items-center justify-center rounded-lg text-[#8E8EA0] hover:text-[#EDEDEF] hover:bg-white/10 transition-colors"
           title="Reset Map View"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
+          <ResetIcon className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Live Route Legend Pill (Bottom Right) */}
       <div className="absolute bottom-4 right-4 bg-[#0C0E15]/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/[0.08] text-xs font-sans z-20 shadow-xl flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+          <span className={`w-2 h-2 rounded-full ${isResolved ? 'bg-emerald-400' : 'bg-yellow-400 animate-pulse'}`} />
           <span className="text-[#EDEDEF] font-bold text-xs">
-            Flight DH7871 · IN TRANSIT (17H)
+            {isResolved ? 'Pier 4 Hazard Mitigated' : 'ALS 4x4 · IN TRANSIT (14M ETA)'}
           </span>
         </div>
         <span className="text-[#71717A] text-[11px] font-mono">
-          SIN ➔ VIE ➔ LAX
+          GND ➔ KTH ➔ P4-APP
         </span>
       </div>
     </div>

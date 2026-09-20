@@ -13,31 +13,28 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
-  Sparkles,
-  Cpu,
-  ShieldCheck,
-  Zap,
-  Users,
-  Layers,
-  Activity,
-  CheckCircle2,
-} from 'lucide-react';
+  TargetIcon,
+  CubeIcon,
+  CheckCircledIcon,
+  LightningBoltIcon,
+  LayersIcon,
+} from '@radix-ui/react-icons';
 
 // Custom Node for Gemini Vision
 function GeminiNode({ data }: any) {
   return (
-    <div className="px-4 py-3 rounded-xl bg-surface-2 border-2 border-indigo shadow-lg shadow-indigo-glow/20 min-w-[190px]">
-      <Handle type="source" position={Position.Right} className="!bg-indigo !w-2.5 !h-2.5" />
+    <div className="px-4 py-3 rounded-2xl bg-[#0E1119] border-2 border-indigo-500/80 shadow-lg shadow-indigo-500/20 min-w-[190px] font-sans">
+      <Handle type="source" position={Position.Right} className="!bg-indigo-500 !w-2.5 !h-2.5" />
       <div className="flex items-center gap-2 mb-1.5">
-        <div className="p-1.5 rounded-lg bg-indigo/20 text-indigo">
-          <Sparkles className="w-4 h-4" />
+        <div className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+          <TargetIcon className="w-4 h-4" />
         </div>
-        <div className="text-[10px] font-mono font-bold text-indigo uppercase tracking-wider">
+        <div className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider">
           PERCEPTION
         </div>
       </div>
-      <div className="text-xs font-bold text-primary">{data.label}</div>
-      <div className="text-[10px] font-mono text-primary-muted mt-1">
+      <div className="text-xs font-bold text-white">{data.label}</div>
+      <div className="text-[10px] font-mono text-[#71717A] mt-1">
         Multimodal Analysis • Trust: 98%
       </div>
     </div>
@@ -47,21 +44,21 @@ function GeminiNode({ data }: any) {
 // Custom Node for Orchestrator Hub
 function OrchestratorNode({ data }: any) {
   return (
-    <div className="px-5 py-4 rounded-xl bg-surface-2 border-2 border-primary-secondary shadow-xl min-w-[210px]">
-      <Handle type="target" position={Position.Left} className="!bg-indigo !w-2.5 !h-2.5" />
-      <Handle type="source" position={Position.Right} className="!bg-purple !w-2.5 !h-2.5" />
-      <Handle type="source" position={Position.Bottom} className="!bg-emerald !w-2.5 !h-2.5" />
+    <div className="px-5 py-4 rounded-2xl bg-[#0E1119] border-2 border-white/30 shadow-xl min-w-[210px] font-sans">
+      <Handle type="target" position={Position.Left} className="!bg-indigo-500 !w-2.5 !h-2.5" />
+      <Handle type="source" position={Position.Right} className="!bg-purple-500 !w-2.5 !h-2.5" />
+      <Handle type="source" position={Position.Bottom} className="!bg-emerald-500 !w-2.5 !h-2.5" />
       <div className="flex items-center gap-2 mb-1.5">
-        <div className="p-1.5 rounded-lg bg-surface-3 text-primary">
-          <Cpu className="w-4 h-4" />
+        <div className="p-1.5 rounded-lg bg-white/[0.08] text-white">
+          <CubeIcon className="w-4 h-4" />
         </div>
-        <div className="text-[10px] font-mono font-bold text-primary-secondary uppercase tracking-wider">
+        <div className="text-[10px] font-mono font-bold text-[#A1A1AA] uppercase tracking-wider">
           CORE ORCHESTRATOR
         </div>
       </div>
-      <div className="text-xs font-bold text-primary">{data.label}</div>
-      <div className="text-[10px] font-mono text-emerald mt-1 flex items-center gap-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald animate-ping" />
+      <div className="text-xs font-bold text-white">{data.label}</div>
+      <div className="text-[10px] font-mono text-emerald-400 mt-1 flex items-center gap-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
         <span>A2A Dispatch Active</span>
       </div>
     </div>
@@ -71,19 +68,19 @@ function OrchestratorNode({ data }: any) {
 // Custom Node for GovernOS Sentinel
 function GovernOSNode({ data }: any) {
   return (
-    <div className="px-4 py-3 rounded-xl bg-surface-2 border-2 border-purple shadow-lg shadow-purple-glow/20 min-w-[190px]">
-      <Handle type="target" position={Position.Left} className="!bg-purple !w-2.5 !h-2.5" />
-      <Handle type="source" position={Position.Right} className="!bg-purple !w-2.5 !h-2.5" />
+    <div className="px-4 py-3 rounded-2xl bg-[#0E1119] border-2 border-purple-500/80 shadow-lg shadow-purple-500/20 min-w-[190px] font-sans">
+      <Handle type="target" position={Position.Left} className="!bg-purple-500 !w-2.5 !h-2.5" />
+      <Handle type="source" position={Position.Right} className="!bg-purple-500 !w-2.5 !h-2.5" />
       <div className="flex items-center gap-2 mb-1.5">
-        <div className="p-1.5 rounded-lg bg-purple/20 text-purple">
-          <ShieldCheck className="w-4 h-4" />
+        <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+          <CheckCircledIcon className="w-4 h-4" />
         </div>
-        <div className="text-[10px] font-mono font-bold text-purple uppercase tracking-wider">
+        <div className="text-[10px] font-mono font-bold text-purple-400 uppercase tracking-wider">
           POLICY ENFORCER
         </div>
       </div>
-      <div className="text-xs font-bold text-primary">{data.label}</div>
-      <div className="text-[10px] font-mono text-primary-muted mt-1">
+      <div className="text-xs font-bold text-white">{data.label}</div>
+      <div className="text-[10px] font-mono text-[#71717A] mt-1">
         Blast Radius Sealed • Trust: 99%
       </div>
     </div>
@@ -93,19 +90,19 @@ function GovernOSNode({ data }: any) {
 // Custom Node for Civic Dispatcher
 function DispatchNode({ data }: any) {
   return (
-    <div className="px-4 py-3 rounded-xl bg-surface-2 border-2 border-emerald shadow-lg shadow-emerald-glow/20 min-w-[190px]">
-      <Handle type="target" position={Position.Top} className="!bg-emerald !w-2.5 !h-2.5" />
-      <Handle type="target" position={Position.Right} className="!bg-emerald !w-2.5 !h-2.5" />
+    <div className="px-4 py-3 rounded-2xl bg-[#0E1119] border-2 border-emerald-500/80 shadow-lg shadow-emerald-500/20 min-w-[190px] font-sans">
+      <Handle type="target" position={Position.Top} className="!bg-emerald-500 !w-2.5 !h-2.5" />
+      <Handle type="target" position={Position.Right} className="!bg-emerald-500 !w-2.5 !h-2.5" />
       <div className="flex items-center gap-2 mb-1.5">
-        <div className="p-1.5 rounded-lg bg-emerald/20 text-emerald">
-          <Zap className="w-4 h-4" />
+        <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+          <LightningBoltIcon className="w-4 h-4" />
         </div>
-        <div className="text-[10px] font-mono font-bold text-emerald uppercase tracking-wider">
+        <div className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider">
           INFRASTRUCTURE ACTUATOR
         </div>
       </div>
-      <div className="text-xs font-bold text-primary">{data.label}</div>
-      <div className="text-[10px] font-mono text-primary-muted mt-1">
+      <div className="text-xs font-bold text-white">{data.label}</div>
+      <div className="text-[10px] font-mono text-[#71717A] mt-1">
         Barriers & Alerts • Trust: 92%
       </div>
     </div>
@@ -115,22 +112,22 @@ function DispatchNode({ data }: any) {
 // Custom Node for Newly Joined Passage Assessment Agent
 function PassageNode({ data }: any) {
   return (
-    <div className="relative px-5 py-4 rounded-xl bg-surface-1 border-2 border-emerald shadow-2xl shadow-emerald-glow/30 min-w-[220px] animate-pulse">
-      <Handle type="target" position={Position.Left} className="!bg-purple !w-2.5 !h-2.5" />
-      <Handle type="source" position={Position.Bottom} className="!bg-emerald !w-2.5 !h-2.5" />
-      <div className="absolute -top-3 right-3 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald text-black shadow-md">
+    <div className="relative px-5 py-4 rounded-2xl bg-[#080A0F] border-2 border-emerald-400 shadow-2xl shadow-emerald-400/30 min-w-[220px] animate-pulse font-sans">
+      <Handle type="target" position={Position.Left} className="!bg-purple-500 !w-2.5 !h-2.5" />
+      <Handle type="source" position={Position.Bottom} className="!bg-emerald-500 !w-2.5 !h-2.5" />
+      <div className="absolute -top-3 right-3 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-400 text-black shadow-md">
         NEWLY JOINED (5th AGENT)
       </div>
       <div className="flex items-center gap-2 mb-1.5">
-        <div className="p-1.5 rounded-lg bg-emerald/20 text-emerald">
-          <Layers className="w-4 h-4" />
+        <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+          <LayersIcon className="w-4 h-4" />
         </div>
-        <div className="text-[10px] font-mono font-bold text-emerald uppercase tracking-wider">
+        <div className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider">
           SPECIALIST INGESTED
         </div>
       </div>
-      <div className="text-xs font-bold text-primary">{data.label}</div>
-      <div className="text-[10px] font-mono text-emerald mt-1 font-semibold">
+      <div className="text-xs font-bold text-white">{data.label}</div>
+      <div className="text-[10px] font-mono text-emerald-400 mt-1 font-semibold">
         flood_passability.calc (v1.0.0)
       </div>
     </div>
@@ -146,8 +143,7 @@ const nodeTypes = {
 };
 
 export function WorkforceGraph() {
-  const { metrics, stage, agents } = useDemo();
-  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const { metrics, stage } = useDemo();
 
   const hasPassageAgent = metrics.agentCount >= 5 || stage === 'joining_workforce' || stage === 'resolved';
 
@@ -241,41 +237,41 @@ export function WorkforceGraph() {
   }, [hasPassageAgent]);
 
   return (
-    <div className="h-full w-full flex flex-col select-none">
+    <div className="h-full w-full flex flex-col select-none font-sans">
       {/* Top Banner */}
-      <div className="p-6 border-b border-border bg-surface-1/90 backdrop-blur-md flex items-center justify-between z-10">
+      <div className="p-6 border-b border-white/[0.08] bg-[#07080B]/90 backdrop-blur-md flex items-center justify-between z-10">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-indigo-muted text-indigo border border-indigo-border">
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
               A2A WORKFORCE TOPOLOGY
             </span>
-            <span className="text-xs font-mono text-primary-muted">
+            <span className="text-xs font-mono text-[#71717A]">
               FLEET COUNT: {metrics.agentCount} ACTIVE AGENTS
             </span>
           </div>
-          <h1 className="text-xl font-bold text-primary">
+          <h1 className="text-xl font-bold text-white">
             Autonomous Agent Workforce Mesh
           </h1>
         </div>
 
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo" />
-            <span className="text-primary-secondary">Perception</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
+            <span className="text-[#8E8EA0]">Perception</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple" />
-            <span className="text-primary-secondary">Governance</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+            <span className="text-[#8E8EA0]">Governance</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald" />
-            <span className="text-primary-secondary">Actuator / Specialist</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="text-[#8E8EA0]">Actuator / Specialist</span>
           </div>
         </div>
       </div>
 
       {/* Graph Canvas */}
-      <div className="flex-1 relative bg-bg">
+      <div className="flex-1 relative bg-[#07080B]">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -287,7 +283,7 @@ export function WorkforceGraph() {
           className="bg-dot-grid"
         >
           <Background color="#14151B" gap={24} size={1} />
-          <Controls className="!bg-surface-2 !border !border-border !fill-white" />
+          <Controls className="!bg-[#0E1119] !border !border-white/10 !fill-white" />
         </ReactFlow>
       </div>
     </div>
