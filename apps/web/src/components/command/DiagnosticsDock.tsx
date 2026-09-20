@@ -3,15 +3,16 @@
 import React, { useState } from 'react';
 import { useDemo } from '@/lib/store';
 import {
+  Clock,
+  CreditCard,
+  Plane,
   ShieldCheck,
   Truck,
-  Layers,
   ArrowRight,
-  Clock,
-  Sparkles,
+  FileText,
+  DollarSign,
+  AlertTriangle,
   ExternalLink,
-  Bot,
-  Activity,
 } from 'lucide-react';
 
 interface DiagnosticsDockProps {
@@ -19,297 +20,236 @@ interface DiagnosticsDockProps {
 }
 
 export function DiagnosticsDock({ selectedSectorId }: DiagnosticsDockProps) {
-  const { metrics, incident, stage, openCapabilityModal, startDemo, stepNext, setScreen, events } = useDemo();
-  const [activeTab, setActiveTab] = useState<'overview' | 'passability' | 'swarm' | 'audit' | 'telemetry'>('overview');
+  const { metrics, incident, stage, openCapabilityModal, startDemo, stepNext, setScreen } = useDemo();
+  const [activeTab, setActiveTab] = useState<'Overview' | 'Timeline' | 'Documents' | 'Cost' | 'Priority'>('Overview');
 
+  const isCivic = selectedSectorId === 'pier-4';
   const isResolved = metrics.activeIncidents === 0;
-  const isExpanded = metrics.agentCount >= 5;
 
-  const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'passability', label: 'Hydrodynamic Passability' },
-    { id: 'swarm', label: 'Swarm Coordination (5 Agents)' },
-    { id: 'audit', label: 'GovernOS Provenance' },
-    { id: 'telemetry', label: 'Live Telemetry' },
-  ] as const;
+  const tabs = ['Overview', 'Timeline', 'Documents', 'Cost', 'Priority'] as const;
 
   return (
-    <div className="w-full h-full flex flex-col justify-between bg-[#0B0D13] rounded-2xl border border-white/[0.08] p-4 shadow-2xl select-none min-h-0 overflow-y-auto">
-      {/* 1. Top Tab Bar (Matching Reference's underline active tabs) */}
-      <div className="flex items-center justify-between border-b border-white/[0.08] pb-2.5 shrink-0">
-        <div className="flex items-center gap-6 overflow-x-auto text-xs font-mono scrollbar-none">
+    <div className="w-full h-full flex flex-col justify-between bg-[#0B0D13] rounded-2xl border border-white/[0.08] p-4 shadow-2xl select-none min-h-0 overflow-y-auto font-sans">
+      {/* 1. Underline Tabs Header (Matching Reference Image) */}
+      <div className="flex items-center justify-between border-b border-white/[0.08] pb-2 shrink-0">
+        <div className="flex items-center gap-6 overflow-x-auto text-xs font-sans scrollbar-none">
           {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
+            const isActive = activeTab === tab;
             return (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === 'Timeline') setScreen('timeline');
+                  else if (tab === 'Documents') setScreen('evaluation');
+                }}
                 className={`relative pb-2 text-xs font-medium transition-all whitespace-nowrap ${
                   isActive
                     ? 'text-white font-bold'
                     : 'text-[#71717A] hover:text-[#EDEDEF]'
                 }`}
               >
-                <span>{tab.label}</span>
+                <span>{tab}</span>
                 {isActive && (
-                  <span className="absolute bottom-[-11px] left-0 right-0 h-[2px] bg-white rounded-full shadow-sm shadow-white/50" />
+                  <span className="absolute bottom-[-9px] left-0 right-0 h-[2px] bg-white rounded-full" />
                 )}
               </button>
             );
           })}
         </div>
 
-        {/* External Quick Navigation Links */}
-        <div className="hidden sm:flex items-center gap-3 shrink-0">
-          <button
-            onClick={() => setScreen('timeline')}
-            className="flex items-center gap-1 text-[11px] font-mono text-[#8E8EA0] hover:text-white transition-colors"
-          >
-            <span>Timeline</span>
-            <ExternalLink className="w-3 h-3" />
-          </button>
+        {/* Action Link */}
+        <div className="hidden sm:flex items-center gap-3 shrink-0 text-xs text-[#71717A]">
           <button
             onClick={() => setScreen('workforce')}
-            className="flex items-center gap-1 text-[11px] font-mono text-[#8E8EA0] hover:text-white transition-colors"
+            className="hover:text-white flex items-center gap-1 transition-colors"
           >
-            <span>Workforce Mesh</span>
+            <span>Fleet Mesh</span>
             <ExternalLink className="w-3 h-3" />
           </button>
         </div>
       </div>
 
-      {/* 2. Main Tab: Overview (Exact compositional replica of reference bottom panel) */}
-      {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center pt-3 flex-1">
-          {/* Left Sub-Panel: Identifier, Status Badge, and Emergency Vehicle Card */}
-          <div className="lg:col-span-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-extrabold font-mono text-white tracking-wider">
-                {incident.id}
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border ${
-                  isResolved
-                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                    : 'bg-crimson/15 text-crimson border-crimson/30 animate-pulse'
-                }`}
-              >
-                {isResolved ? 'MITIGATED' : 'CRITICAL ALERT'}
-              </span>
-            </div>
-
-            {/* Emergency Vehicle Graphic Card (Matching Reference Airplane/Vehicle Card) */}
-            <div className="p-2.5 rounded-xl bg-[#11141D] border border-white/[0.06] flex items-center gap-3 shadow-inner">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-md shadow-amber-500/10">
-                <Truck className="w-6 h-6" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <div className="text-xs font-bold text-white truncate font-mono">
-                  ALS 4x4 Ambulance Unit
-                </div>
-                <div className="text-[10px] font-mono text-[#8E8EA0] truncate">
-                  Fleet ID: AMB-Z4-04 • Staging Hub A
-                </div>
-                <div className="text-[9px] font-mono text-cyan-400 mt-0.5">
-                  Clearance: 0.42m • 4x4 High-Chassis
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Center Sub-Panel: Route Progression Track (Matching Reference Route Bar) */}
-          <div className="lg:col-span-5 space-y-2 p-3 rounded-xl bg-[#11141D] border border-white/[0.06]">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-[#EDEDEF] font-bold">Route Trajectory</span>
-              <span className="text-emerald-400 font-bold text-[10.5px]">
-                {isResolved ? 'DEPLOYED ON SCENE' : 'ON THE WAY: 14m ETA'}
-              </span>
-            </div>
-
-            {/* Segmented Progress Track */}
-            <div className="relative w-full h-2 rounded-full bg-[#181D29] overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-700 ${
-                  isResolved
-                    ? 'w-full bg-emerald-400'
-                    : 'w-2/3 bg-gradient-to-r from-amber-400 via-yellow-400 to-emerald-400 animate-pulse'
-                }`}
-              />
-            </div>
-
-            {/* Origin & Destination labels */}
-            <div className="flex items-center justify-between text-[10.5px] font-mono pt-0.5">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                <span className="text-[#EDEDEF] font-medium truncate max-w-[130px]">
-                  Guindy Staging Hub A
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${
-                    isResolved ? 'bg-emerald-400' : 'bg-crimson'
-                  }`}
-                />
-                <span className="text-[#EDEDEF] font-medium truncate max-w-[130px] text-right">
-                  Pier 4 Arterial Bridge
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Sub-Panel: Compact Metric Cards & Scenario Action Trigger */}
-          <div className="lg:col-span-3 space-y-2">
-            <div className="grid grid-cols-3 gap-1.5 text-xs font-mono">
-              <div className="p-1.5 rounded-xl bg-[#11141D] border border-white/[0.06] text-center">
-                <span className="text-[9px] text-[#71717A] uppercase block">Water</span>
-                <span className="text-xs font-extrabold text-crimson">68 cm</span>
-              </div>
-              <div className="p-1.5 rounded-xl bg-[#11141D] border border-white/[0.06] text-center">
-                <span className="text-[9px] text-[#71717A] uppercase block">Flow</span>
-                <span className="text-xs font-extrabold text-amber-400">1.8 m/s</span>
-              </div>
-              <div className="p-1.5 rounded-xl bg-[#11141D] border border-white/[0.06] text-center">
-                <span className="text-[9px] text-[#71717A] uppercase block">ETA</span>
-                <span className="text-xs font-extrabold text-emerald-400">14 min</span>
-              </div>
-            </div>
-
-            {/* Interactive Scenario Advance Button */}
-            {stage === 'capability_gap' ? (
-              <button
-                onClick={openCapabilityModal}
-                className="w-full py-1.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 transition-all"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Resolve Capability Gap</span>
-              </button>
-            ) : stage === 'idle' ? (
-              <button
-                onClick={startDemo}
-                className="w-full py-1.5 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono text-xs font-bold shadow-md shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Start Autonomous Swarm</span>
-              </button>
-            ) : (
-              <button
-                onClick={stepNext}
-                disabled={stage === 'resolved'}
-                className="w-full py-1.5 px-3 rounded-xl bg-[#161B26] hover:bg-[#1E2433] border border-white/10 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-40"
-              >
-                <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Advance ({stage.replace('_', ' ').toUpperCase()})</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 3. Secondary Tab: Hydrodynamic Passability */}
-      {activeTab === 'passability' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs pt-2">
-          <div className="p-3 rounded-xl bg-[#11141D] border border-crimson/30 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-white font-bold">Civilian Sedans</span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] bg-crimson/20 text-crimson font-bold">
-                IMPASSABLE
-              </span>
-            </div>
-            <p className="text-[10px] text-[#8E8EA0] leading-relaxed">
-              Max clearance: 30cm. 68cm water depth creates 100% stall/drown risk. Hard barricade deployed.
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-[#11141D] border border-amber-500/30 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-white font-bold">Standard Ambulances</span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-500/20 text-amber-400 font-bold">
-                HIGH RISK
-              </span>
-            </div>
-            <p className="text-[10px] text-[#8E8EA0] leading-relaxed">
-              Clearance: 45cm. Turbidity and 1.8 m/s current pose rollover danger. Rerouted to Inner Ring Road.
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-[#11141D] border border-emerald-500/30 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-white font-bold">ALS 4x4 Emergency Fleet</span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-400 font-bold">
-                PASSABLE
-              </span>
-            </div>
-            <p className="text-[10px] text-[#8E8EA0] leading-relaxed">
-              Clearance: 75cm. Snorkel intake active. Passage Assessment Agent calculates safe passage ratio 0.42.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* 4. Secondary Tab: Swarm Coordination */}
-      {activeTab === 'swarm' && (
-        <div className="p-3 rounded-xl bg-[#11141D] border border-white/[0.06] flex items-center justify-between pt-2">
-          <div className="space-y-1 font-mono">
-            <div className="text-xs font-bold text-white">
-              {isExpanded ? '5-Agent Swarm Operational' : '4-Agent Baseline Swarm Active'}
-            </div>
-            <div className="text-[10.5px] text-[#8E8EA0]">
-              Perception ➔ Orchestration ➔ GovernOS Sentinel ➔ Hydraulic Passage ➔ Civic Dispatch
-            </div>
-          </div>
-          <button
-            onClick={() => setScreen('workforce')}
-            className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors"
-          >
-            <span>View Mesh Graph</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {/* 5. Secondary Tab: GovernOS Provenance */}
-      {activeTab === 'audit' && (
-        <div className="p-3 rounded-xl bg-[#11141D] border border-white/[0.06] flex items-center justify-between pt-2">
-          <div className="space-y-1 font-mono">
-            <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Immutable Ledger Sealed (100% Pass Rate)</span>
-            </div>
-            <div className="text-[10.5px] text-[#8E8EA0]">
-              Hash: 0x9f83...c72d • Policy CITY-PRIVACY-02 enforced • Zero PII leakage
-            </div>
-          </div>
-          <button
-            onClick={() => setScreen('timeline')}
-            className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors"
-          >
-            <span>Inspect Provenance Trail</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {/* 6. Secondary Tab: Live Telemetry */}
-      {activeTab === 'telemetry' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2">
-          {events.slice(0, 3).map((e) => (
-            <div
-              key={e.id}
-              className="p-2.5 rounded-xl bg-[#11141D] border border-white/[0.05] space-y-1 hover:border-white/15 transition-all font-mono"
+      {/* 2. Main Content Row (Exact Match to Reference Bottom Layout) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center pt-3 flex-1">
+        {/* ── Left Column (4 cols): ID + Status Badge + Vehicle Render + Name ── */}
+        <div className="lg:col-span-4 space-y-2.5">
+          <div className="flex items-center gap-2.5">
+            <span className="text-sm font-bold font-mono text-white tracking-wider">
+              {isCivic ? incident.id : 'SF2043892GH'}
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[9px] font-sans font-bold border ${
+                isCivic
+                  ? isResolved
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25'
+                    : 'bg-red-500/15 text-red-400 border-red-500/25 animate-pulse'
+                  : 'bg-blue-500/15 text-blue-400 border-blue-500/25'
+              }`}
             >
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="px-1.5 py-0.2 rounded font-bold bg-[#181D29] text-[#EDEDEF] border border-white/10">
-                  {e.source}
-                </span>
-                <span className="text-[#71717A]">+{e.timestamp}</span>
+              {isCivic ? (isResolved ? 'RESOLVED' : 'CRITICAL') : 'IN TRANSIT'}
+            </span>
+          </div>
+
+          {/* Vehicle Illustration Render Card (Matching the Yellow DHL Airplane in Reference) */}
+          <div className="flex items-center gap-4 pt-1">
+            {isCivic ? (
+              // Civic Emergency 4x4 Ambulance Render
+              <div className="w-24 h-12 rounded-xl bg-[#11131A] border border-white/[0.06] flex items-center justify-center p-2 shadow-inner">
+                <Truck className="w-8 h-8 text-cyan-400" />
               </div>
-              <div className="text-[11px] font-bold text-white truncate">{e.title}</div>
-              <p className="text-[9.5px] text-[#8E8EA0] line-clamp-2 leading-relaxed">
-                {e.detail}
-              </p>
+            ) : (
+              // Sleek Yellow Cargo Plane Illustration (Matching Reference Image)
+              <div className="w-32 h-12 rounded-xl bg-[#11131A] border border-white/[0.06] flex items-center justify-center px-3 shadow-inner relative overflow-hidden">
+                <svg viewBox="0 0 120 40" className="w-full h-full filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                  {/* Fuselage */}
+                  <path
+                    d="M 10 24 L 85 24 Q 105 24 115 21 Q 105 18 85 18 L 10 18 Z"
+                    fill="#EAB308"
+                  />
+                  {/* DHL Red Stripe */}
+                  <rect x="25" y="20" width="45" height="3" fill="#DC2626" />
+                  {/* Wings */}
+                  <path d="M 45 20 L 30 8 L 42 8 L 65 20 Z" fill="#CA8A04" />
+                  {/* Tail Fin */}
+                  <path d="M 12 18 L 2 6 L 15 6 L 24 18 Z" fill="#EAB308" />
+                  <rect x="5" y="8" width="8" height="2" fill="#DC2626" />
+                  {/* Cockpit Window */}
+                  <path d="M 105 19 L 110 20 L 105 21 Z" fill="#18181B" />
+                </svg>
+              </div>
+            )}
+
+            <div className="flex flex-col min-w-0">
+              <div className="text-xs font-bold text-white truncate font-sans">
+                {isCivic ? 'Civic Dispatch / ALS 4x4' : 'DHL / Boeing 777F'}
+              </div>
+              <div className="text-[10px] font-sans text-[#71717A] truncate mt-0.5">
+                {isCivic
+                  ? 'Fleet AMB-Z4-04 • Staging Hub A'
+                  : 'Flight DH7871 · Reg · D-AALT'}
+              </div>
             </div>
-          ))}
+          </div>
         </div>
-      )}
+
+        {/* ── Center Column (5 cols): Route Header + Progress Track + Locations ── */}
+        <div className="lg:col-span-5 space-y-2.5 p-3 rounded-xl bg-[#101219] border border-white/[0.05]">
+          <div className="flex items-center justify-between text-xs font-sans">
+            <span className="text-[#EDEDEF] font-bold">Route</span>
+            <span className="text-[#8E8EA0] text-[11px] font-mono">
+              {isCivic
+                ? isResolved
+                  ? 'ON SCENE'
+                  : 'ON THE WAY: 14M ETA'
+                : 'ON THE WAY: 2D 12H 44M'}
+            </span>
+          </div>
+
+          {/* Segmented Progress Track (Matching Reference Image) */}
+          <div className="relative w-full h-1.5 rounded-full bg-[#1C1F2B] overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${
+                isCivic
+                  ? isResolved
+                    ? 'w-full bg-emerald-400'
+                    : 'w-2/3 bg-gradient-to-r from-amber-400 to-red-500 animate-pulse'
+                  : 'w-3/5 bg-gradient-to-r from-white via-yellow-400 to-yellow-500'
+              }`}
+            />
+          </div>
+
+          {/* Origin & Destination Labels with Dots */}
+          <div className="flex items-center justify-between text-xs font-sans pt-0.5">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-white shrink-0" />
+              <div>
+                <span className="font-bold text-white font-mono text-[11px] mr-1">
+                  {isCivic ? 'GND' : 'SIN'}
+                </span>
+                <span className="text-[#8E8EA0] text-[11px]">
+                  {isCivic ? 'Guindy Hub A' : 'Singapore, Singapore'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-right">
+              <div>
+                <span className="font-bold text-white font-mono text-[11px] mr-1">
+                  {isCivic ? 'P4-APP' : 'LAX'}
+                </span>
+                <span className="text-[#8E8EA0] text-[11px]">
+                  {isCivic ? 'Pier 4 Bridge' : 'Los Angeles, USA'}
+                </span>
+                <span className="block text-[9.5px] text-[#71717A] font-mono">
+                  {isCivic ? 'ETA 14 MIN' : 'ETA DEC 22, 2024'}
+                </span>
+              </div>
+              <span className="w-2 h-2 rounded-full bg-white shrink-0" />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Right Column (3 cols): Two Sleek Stat Blocks (Matching Reference) ── */}
+        <div className="lg:col-span-3 flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            {/* Stat Block 1: Estimate */}
+            <div className="p-2.5 rounded-xl bg-[#101219] border border-white/[0.05] flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center text-[#8E8EA0] shrink-0">
+                <Clock className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] text-[#71717A] block">Estimate</span>
+                <span className="text-xs font-bold text-white truncate block font-sans">
+                  {isCivic ? '14 MIN' : 'OCT 15, 2024'}
+                </span>
+              </div>
+            </div>
+
+            {/* Stat Block 2: Total cost / Trust */}
+            <div className="p-2.5 rounded-xl bg-[#101219] border border-white/[0.05] flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center text-[#8E8EA0] shrink-0">
+                <CreditCard className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] text-[#71717A] block">
+                  {isCivic ? 'Trust Score' : 'Total cost'}
+                </span>
+                <span className="text-xs font-bold text-white truncate block font-sans">
+                  {isCivic ? `${metrics.trustScore}% Gated` : '$12,590'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Demo Action Button */}
+          {stage === 'capability_gap' ? (
+            <button
+              onClick={openCapabilityModal}
+              className="w-full py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-sans text-xs font-bold shadow-md shadow-indigo-600/20 flex items-center justify-center gap-1.5 transition-all"
+            >
+              <span>Resolve Capability Gap</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : stage === 'idle' ? (
+            <button
+              onClick={startDemo}
+              className="w-full py-1.5 px-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-sans text-xs font-bold shadow-md shadow-cyan-500/20 flex items-center justify-center gap-1.5 transition-all active:scale-95"
+            >
+              <span>Launch Autonomous Mission</span>
+            </button>
+          ) : (
+            <button
+              onClick={stepNext}
+              disabled={stage === 'resolved'}
+              className="w-full py-1.5 px-3 rounded-lg bg-[#161B26] hover:bg-[#1E2433] border border-white/10 text-white font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40"
+            >
+              <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Advance ({stage.replace('_', ' ').toUpperCase()})</span>
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
