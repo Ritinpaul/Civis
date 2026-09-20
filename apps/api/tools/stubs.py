@@ -1,7 +1,7 @@
 """
 CIVIS — Deterministic Tool Stubs
-Provides realistic, demo-safe sensor and telemetry data for Chennai Zone 4
-(Saidapet / Velachery corridor, Mount Road, Adyar River basin).
+Provides realistic, demo-safe sensor and telemetry data for Bengaluru East Corridor
+(Bellandur / Silk Board corridor, Outer Ring Road, Koramangala - Varthur basin).
 """
 from typing import Dict, Any, Optional
 from tools.base import BaseTool
@@ -20,7 +20,7 @@ class WeatherReadTool(BaseTool):
         "required": ["location"],
     }
 
-    def execute(self, location: str = "Zone 4", time_range: str = "1h", **kwargs) -> Dict[str, Any]:
+    def execute(self, location: str = "Bengaluru East Corridor", time_range: str = "1h", **kwargs) -> Dict[str, Any]:
         return {
             "location": location,
             "rainfall_mm": 142.5,
@@ -30,9 +30,9 @@ class WeatherReadTool(BaseTool):
             "pressure_hpa": 994.2,
             "precipitation_forecast_3h_mm": 85.0,
             "weather_summary": (
-                "Severe monsoon cloudburst active over Chennai Zone 4. "
+                "Severe monsoon cloudburst active over Bengaluru East Corridor. "
                 "Total accumulated rainfall: 142.5mm with 38mm/hr intensity. "
-                "Adyar River basin water levels rising rapidly."
+                "Bellandur Lake spillway water levels rising rapidly."
             ),
         }
 
@@ -50,21 +50,21 @@ class TrafficReadTool(BaseTool):
         "required": ["zone"],
     }
 
-    def execute(self, zone: str = "Zone 4", **kwargs) -> Dict[str, Any]:
+    def execute(self, zone: str = "Bengaluru East Corridor", **kwargs) -> Dict[str, Any]:
         return {
             "zone": zone,
             "congestion_level": "critical",
             "average_speed_kmh": 6.5,
             "affected_roads": [
-                "Mount Road / Anna Salai (Saidapet Causeway section)",
-                "Velachery Main Road (near Vijaya Nagar junction)",
-                "GST Road underpass (Guindy - Saidapet segment)",
-                "Taluk Office Road",
+                "Outer Ring Road / ORR (Bellandur Spillway section)",
+                "Marathahalli Main Road (near Junction flyover)",
+                "Silk Board Interchange (HSR - Silk Board segment)",
+                "HAL Airport Road Bypass",
             ],
             "estimated_delay_minutes": 55,
             "traffic_summary": (
-                "Extreme congestion across Zone 4. Saidapet causeway is impassable for standard vehicular flow. "
-                "Traffic diverted toward Inner Ring Road. Velachery Main Road experiencing 2km vehicle queue."
+                "Extreme congestion across Bengaluru East Corridor. Bellandur spillway bridge is impassable for standard vehicular flow. "
+                "Traffic diverted toward HAL Airport Road. Outer Ring Road experiencing 3km vehicle queue."
             ),
         }
 
@@ -82,7 +82,7 @@ class RoadReadTool(BaseTool):
         "required": ["road_name"],
     }
 
-    def execute(self, road_name: str = "Mount Road", zone: str = "Zone 4", **kwargs) -> Dict[str, Any]:
+    def execute(self, road_name: str = "Outer Ring Road (ORR)", zone: str = "Bengaluru East Corridor", **kwargs) -> Dict[str, Any]:
         return {
             "road_name": road_name,
             "zone": zone,
@@ -92,8 +92,8 @@ class RoadReadTool(BaseTool):
             "passable_for_light_vehicles": False,
             "passable_for_ambulances_4x4": True,
             "blockages": [
-                "Saidapet Bridge approach water depth exceeds 65cm",
-                "Submerged median divider near Maraimalai Adigal Bridge",
+                "Bellandur Spillway Bridge approach water depth exceeds 65cm",
+                "Submerged median divider near EcoSpace Tech Park",
             ],
             "road_summary": (
                 f"{road_name} in {zone} is submerged under 68cm standing water. "
@@ -114,24 +114,24 @@ class DrainageReadTool(BaseTool):
         "required": ["zone"],
     }
 
-    def execute(self, zone: str = "Zone 4", **kwargs) -> Dict[str, Any]:
+    def execute(self, zone: str = "Bengaluru East Corridor", **kwargs) -> Dict[str, Any]:
         return {
             "zone": zone,
             "drainage_status": "overloaded",
             "capacity_percentage": 124.5,
             "at_risk_zones": [
-                "Zone 4 - Saidapet West residential belt",
-                "Zone 4 - Velachery Lake outfall channel",
-                "Zone 4 - Adyar River South Bank",
+                "Bengaluru East - Koramangala residential belt",
+                "Bengaluru East - Varthur Lake outfall channel",
+                "Bengaluru East - Bellandur Lake South Bank",
             ],
             "pumping_stations": {
-                "Saidapet Pumping Station #1": "running_max_capacity_12000_lpm",
-                "Saidapet Auxiliary Station #2": "generator_active_10000_lpm",
-                "Velachery Canal Outfall": "backflow_risk_due_to_high_tide",
+                "Koramangala Pumping Station #1": "running_max_capacity_12000_lpm",
+                "Bellandur Auxiliary Station #2": "generator_active_10000_lpm",
+                "Varthur Canal Outfall": "overflow_risk_due_to_heavy_inflow",
             },
             "infra_summary": (
                 "Stormwater system running at 124.5% capacity. Pumping stations operating at full throttle. "
-                "Adyar River high tide creates backflow pressure at stormwater outfalls."
+                "Bellandur Lake spillway overflow creates backflow pressure at stormwater outfalls."
             ),
         }
 
@@ -149,7 +149,7 @@ class EmergencyReadTool(BaseTool):
         "required": ["zone"],
     }
 
-    def execute(self, zone: str = "Zone 4", incident_description: str = "", **kwargs) -> Dict[str, Any]:
+    def execute(self, zone: str = "Bengaluru East Corridor", incident_description: str = "", **kwargs) -> Dict[str, Any]:
         return {
             "zone": zone,
             "available_resources": {
@@ -159,15 +159,15 @@ class EmergencyReadTool(BaseTool):
                 "heavy_recovery_trucks": 2,
             },
             "priority_zones": [
-                "Saidapet low-lying riverside settlement (120 households)",
-                "Velachery AGS Colony ground floor apartments",
+                "Bellandur low-lying lakeside settlement (120 households)",
+                "Koramangala 8th Block ground floor apartments",
             ],
-            "recommended_staging_area": "Guindy Race Course Ground (Staging Hub A)",
-            "recommended_primary_route": "Inner Ring Road -> Guindy Flyover -> Saidapet West Approach",
+            "recommended_staging_area": "Silk Board Junction Ground (Staging Hub A)",
+            "recommended_primary_route": "HAL Airport Road -> Marathahalli ORR -> Bellandur West Approach",
             "estimated_eta_minutes": 14,
             "emergency_summary": (
-                "4 ALS ambulances and 3 rescue boats deployed at Guindy Staging Hub A. "
-                "Disaster response team on 10-minute readiness for Saidapet riverside evacuation."
+                "4 ALS ambulances and 3 rescue boats deployed at Silk Board Staging Hub A. "
+                "Disaster response team on 10-minute readiness for Bellandur lakeside evacuation."
             ),
         }
 
@@ -185,7 +185,7 @@ class ImageryReadTool(BaseTool):
         "required": ["location"],
     }
 
-    def execute(self, location: str = "Zone 4 Saidapet", sensor_type: str = "optical", **kwargs) -> Dict[str, Any]:
+    def execute(self, location: str = "Bengaluru Bellandur", sensor_type: str = "optical", **kwargs) -> Dict[str, Any]:
         return {
             "location": location,
             "sensor_type": sensor_type,
@@ -195,12 +195,13 @@ class ImageryReadTool(BaseTool):
             "surface_confidence": 0.94,
             "inundated_area_sq_km": 3.42,
             "flood_contour_vector": [
-                {"lat": 13.0152, "lng": 80.2201},
-                {"lat": 13.0195, "lng": 80.2248},
-                {"lat": 13.0118, "lng": 80.2290},
+                {"lat": 12.9333, "lng": 77.6690},
+                {"lat": 12.9385, "lng": 77.6740},
+                {"lat": 12.9290, "lng": 77.6720},
             ],
             "imagery_summary": (
-                "High-confidence standing water detected across 3.42 sq km along Saidapet - Velachery corridor. "
+                "High-confidence standing water detected across 3.42 sq km along Bellandur - Outer Ring Road corridor. "
                 "Turbid floodwater clearly identified along road boundaries."
             ),
         }
+

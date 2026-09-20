@@ -8,10 +8,168 @@ import {
   Agent,
   EvaluationTest,
   AuthorityPolicy,
+  ScenarioId,
+  ScenarioInfo,
 } from '@/types/demo';
+
+export const SCENARIO_PRESETS: Record<ScenarioId, ScenarioInfo> = {
+  'bellandur-flood': {
+    id: 'bellandur-flood',
+    name: 'Bellandur Spillway Flood',
+    zone: 'East Corridor (Mahadevapura / ORR)',
+    tag: 'Adaptive Agent Forge (Primary)',
+    incidentId: 'INC-2047',
+    location: 'Bellandur Spillway Arterial Bridge',
+    description: 'Severe water surge detected on Outer Ring Road. Normal workforce lacks flood passability capability.',
+    center: [12.9353, 77.6560],
+    zoom: 14,
+    primarySectorId: 'pier-4',
+    hazardPolygon: [
+      [12.9420, 77.6600],
+      [12.9370, 77.6740],
+      [12.9330, 77.6780],
+      [12.9290, 77.6720],
+      [12.9280, 77.6650],
+    ],
+    hazardLabel: 'Bellandur Spillway Inundation Basin',
+    detourCoords: [
+      [12.9177, 77.6238],
+      [12.9300, 77.6350],
+      [12.9560, 77.6980],
+      [12.9431, 77.7470],
+      [12.9333, 77.6690],
+    ],
+    detourLabel: 'SLK ➔ MRH ➔ BLR-APP',
+    vehicleLabel: 'ALS 4x4 · IN TRANSIT (14M ETA)',
+    visionFeed: {
+      camId: 'ORR-CAM-018',
+      camName: 'Outer Ring Road (ORR) Cam-18 Feed',
+      timestamp: '14s ago',
+      resolution: '4K UHD · Infrared Optical',
+      detections: [
+        { label: 'SUBMERGED VEHICLE (SEDAN)', box: [45, 30, 25, 20], confidence: 0.984, severity: 'critical' },
+        { label: 'WATER CREST DEPTH: 68CM', box: [60, 15, 65, 30], confidence: 0.991, severity: 'critical' },
+        { label: 'IMPASSABLE ROAD BOUNDARY', box: [35, 5, 80, 55], confidence: 0.952, severity: 'warning' },
+      ],
+    },
+    dossier: {
+      affectedCivilianEstimate: '3,400 Commuters / 48 Vehicles',
+      transitDelayMinutes: 45,
+      evacuationPriority: 'CRITICAL (Tier 1)',
+      nearestHub: 'Silk Board Staging Hub A',
+      recommendedCapability: 'flood_passability.calc',
+      tacticalNotes: [
+        'Spillway overflow triggered by 82mm torrential downpour.',
+        'Standard fleet ambulances unable to calculate safe bridge embankment depth.',
+        'Workforce lacked flood depth passability estimation capability; automated forge initiated.',
+      ],
+    },
+  },
+  'silkboard-gridlock': {
+    id: 'silkboard-gridlock',
+    name: 'Silk Board Multi-Agency Gridlock',
+    zone: 'South Corridor (Bommanahalli / BTM)',
+    tag: 'Cross-Agency Coordination',
+    incidentId: 'INC-2051',
+    location: 'Silk Board Junction Intermodal Hub',
+    description: '4-way arterial deadlock intersecting metro construction and high-volume commuter spillover.',
+    center: [12.9177, 77.6238],
+    zoom: 14,
+    primarySectorId: 'silkboard-hub',
+    hazardPolygon: [
+      [12.9250, 77.6160],
+      [12.9240, 77.6320],
+      [12.9120, 77.6310],
+      [12.9110, 77.6160],
+    ],
+    hazardLabel: 'Silk Board Multi-Agency Gridlock Zone',
+    detourCoords: [
+      [12.9177, 77.6238],
+      [12.8950, 77.6400],
+      [12.8700, 77.6520],
+      [12.8450, 77.6650],
+    ],
+    detourLabel: 'SLK ➔ HOSUR RD ➔ E-CITY',
+    vehicleLabel: 'TRAFFIC SWARM · RAPID ESCORT',
+    visionFeed: {
+      camId: 'SLK-JUNCTION-04',
+      camName: 'Silk Board Central Flyover Cam-04',
+      timestamp: '06s ago',
+      resolution: '1080p · Optical AI Stream',
+      detections: [
+        { label: '4-WAY ARTERIAL GRIDLOCK', box: [30, 20, 50, 45], confidence: 0.993, severity: 'critical' },
+        { label: 'METRO CRANE ENTRANCE BLOCKED', box: [65, 50, 25, 25], confidence: 0.961, severity: 'warning' },
+        { label: 'EMERGENCY LANE SUBVERTED', box: [20, 10, 60, 20], confidence: 0.947, severity: 'critical' },
+      ],
+    },
+    dossier: {
+      affectedCivilianEstimate: '14,200 Commuters / 380 Vehicles',
+      transitDelayMinutes: 85,
+      evacuationPriority: 'HIGH (Tier 2)',
+      nearestHub: 'Silk Board Staging Hub A',
+      recommendedCapability: 'traffic_intercept.rebalance',
+      tacticalNotes: [
+        'Metro phase construction lane restriction compounded by inbound Hosur morning surge.',
+        'Ambulance transit stalled on BTM arterial feeder corridor.',
+        'Traffic Swarm re-routing arterial signals to elevated expressway ramp.',
+      ],
+    },
+  },
+  'hebbal-surge': {
+    id: 'hebbal-surge',
+    name: 'Hebbal-Yelahanka Storm Surge',
+    zone: 'North Corridor (Airport Expressway)',
+    tag: 'Hydrological Sump Balancing',
+    incidentId: 'INC-2058',
+    location: 'Hebbal Flyover Inundation Sump',
+    description: 'Stormwater backflow overflow threatening airport expressway underpass.',
+    center: [13.0358, 77.5920],
+    zoom: 14,
+    primarySectorId: 'hebbal-hub',
+    hazardPolygon: [
+      [13.0450, 77.5850],
+      [13.0440, 77.6020],
+      [13.0300, 77.6010],
+      [13.0280, 77.5840],
+    ],
+    hazardLabel: 'Hebbal Expressway Inundation Sump',
+    detourCoords: [
+      [13.0358, 77.5920],
+      [13.0480, 77.6190],
+      [13.0650, 77.6250],
+      [13.0850, 77.6350],
+    ],
+    detourLabel: 'HBL ➔ MANYATA ➔ AIRPORT EXPY',
+    vehicleLabel: 'HIGH-CLEARANCE RESCUE · EN ROUTE',
+    visionFeed: {
+      camId: 'HBL-EXPY-07',
+      camName: 'Hebbal Flyover Expressway Cam-07',
+      timestamp: '18s ago',
+      resolution: '4K UHD · Optical Storm Feed',
+      detections: [
+        { label: 'UNDERPASS HYDRAULIC SURGE (54CM)', box: [50, 25, 40, 35], confidence: 0.988, severity: 'critical' },
+        { label: 'AIRPORT BUS ENGINES FLOODED', box: [40, 45, 30, 25], confidence: 0.975, severity: 'critical' },
+        { label: 'OUTFLOW SLUICE OVERCAPACITY', box: [75, 10, 20, 20], confidence: 0.934, severity: 'warning' },
+      ],
+    },
+    dossier: {
+      affectedCivilianEstimate: '5,800 Airport Passengers / 95 Cabs',
+      transitDelayMinutes: 60,
+      evacuationPriority: 'CRITICAL (Tier 1)',
+      nearestHub: 'Hebbal Flyover Staging Hub B',
+      recommendedCapability: 'sluice_pressure.vent',
+      tacticalNotes: [
+        'Nagawara lake channel backflow surging into airport expressway underpass.',
+        'High-clearance rescue units deployed from North Staging Hub B.',
+        'Secondary sluice venting initiated to balance central storm basin load.',
+      ],
+    },
+  },
+};
 
 interface DemoContextType extends DemoState {
   setScreen: (screen: DemoState['activeScreen']) => void;
+  setScenario: (scenario: ScenarioId) => void;
   startDemo: () => void;
   pauseDemo: () => void;
   resetDemo: () => void;
@@ -21,15 +179,22 @@ interface DemoContextType extends DemoState {
   closeCapabilityModal: () => void;
   selectCandidate: (agentId: string) => void;
   repairAgent: () => void;
+  reportModalOpen: boolean;
+  openReportModal: () => void;
+  closeReportModal: () => void;
+  visionModalOpen: boolean;
+  openVisionModal: () => void;
+  closeVisionModal: () => void;
   triggerLiveDenial: () => void;
 }
 
-const INITIAL_INCIDENT = {
+
+const INITIAL_INCIDENT: DemoState['incident'] = {
   id: 'INC-2047',
-  title: 'Bridge Pier 4 Inundation & Hazard',
-  description: 'Uncalibrated water surge detected near downtown arterial bridge. Roadway passability uncertain for emergency vehicles.',
-  severity: 'HIGH' as const,
-  location: 'Pier 4 — Riverside Arterial, Ward 7',
+  title: 'Bellandur Spillway Inundation & Hazard',
+  description: 'Uncalibrated water surge detected near arterial bridge. Roadway passability uncertain for emergency vehicles.',
+  severity: 'CRITICAL',
+  location: 'Bellandur Spillway Arterial Bridge',
   source: 'Gemini 1.5 Pro Multimodal Vision',
   timestamp: 'Just now',
 };
@@ -151,11 +316,27 @@ const INITIAL_POLICIES: AuthorityPolicy[] = [
   },
 ];
 
+export const SCENARIO_SEED_EVENTS: Record<ScenarioId, IncidentEvent[]> = {
+  'bellandur-flood': [
+    { id: 'EVT-001', timestamp: '00:01.120', source: 'GEMINI', title: 'Multimodal Surge Anomaly Detected', detail: 'Gemini Vision sensor identified 0.85m water accumulation at Bellandur Pier 4. Confidence: 98.4%.', status: 'warning', elapsedMs: 1120 },
+    { id: 'EVT-002', timestamp: '00:01.840', source: 'ORCHESTRATOR', title: 'Incident INC-2047 Registered', detail: 'Classified as CRITICAL flood risk. Initiating workforce capability scan.', status: 'info', elapsedMs: 1840 },
+  ],
+  'silkboard-gridlock': [
+    { id: 'EVT-001', timestamp: '00:01.200', source: 'GEMINI', title: '4-Way Arterial Gridlock Confirmed', detail: 'Silk Board Central Flyover Cam-04 detected full arterial deadlock. 380 vehicles stalled. Confidence: 99.3%.', status: 'warning', elapsedMs: 1200 },
+    { id: 'EVT-002', timestamp: '00:01.900', source: 'ORCHESTRATOR', title: 'Incident INC-2051 Registered', detail: 'Classified as HIGH severity traffic crisis. Cross-agency coordination required.', status: 'info', elapsedMs: 1900 },
+  ],
+  'hebbal-surge': [
+    { id: 'EVT-001', timestamp: '00:01.350', source: 'GEMINI', title: 'Stormwater Backflow Surge Detected', detail: 'Hebbal Expressway Cam-07 identified hydraulic surge at 54cm depth. Airport buses compromised. Confidence: 98.8%.', status: 'warning', elapsedMs: 1350 },
+    { id: 'EVT-002', timestamp: '00:02.100', source: 'ORCHESTRATOR', title: 'Incident INC-2058 Registered', detail: 'Classified as CRITICAL flood risk. Sluice balancing protocol initiated.', status: 'info', elapsedMs: 2100 },
+  ],
+};
+
 const DemoContext = createContext<DemoContextType | null>(null);
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [stage, setStage] = useState<DemoStage>('idle');
   const [activeScreen, setActiveScreen] = useState<DemoState['activeScreen']>('command');
+  const [activeScenario, setActiveScenario] = useState<ScenarioId>('bellandur-flood');
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [incident, setIncident] = useState(INITIAL_INCIDENT);
@@ -189,6 +370,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [evaluationTests, setEvaluationTests] = useState<EvaluationTest[]>(INITIAL_TESTS);
   const [authorityPolicies, setAuthorityPolicies] = useState<AuthorityPolicy[]>(INITIAL_POLICIES);
   const [capabilityModalOpen, setCapabilityModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [visionModalOpen, setVisionModalOpen] = useState(false);
   const [liveDenialActive, setLiveDenialActive] = useState(false);
 
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -384,36 +567,75 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     }
   }, [stage, advanceToStage]);
 
-  // Auto-play driver
+  // Per-stage dwell times (ms). 0 = pause until human action.
+  const STAGE_DURATIONS: Partial<Record<DemoStage, number>> = {
+    incident_detected: 4500,
+    investigating: 3500,
+    capability_gap: 3000,
+    evaluating: 3200,
+    evaluation_failed: 0,    // PAUSE — wait for Protocol Zero human auth
+    repairing: 3200,
+    verified: 3800,
+    joining_workforce: 4000,
+    resolved: 0,             // Mission complete — stay here
+  };
+
+  // Auto-play driver — uses per-stage dwell times
   useEffect(() => {
     if (!isAutoPlaying) {
-      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
+      if (autoPlayTimerRef.current) {
+        clearTimeout(autoPlayTimerRef.current);
+        autoPlayTimerRef.current = null;
+      }
       return;
     }
 
-    const interval = Math.max(1200 / playbackSpeed, 600);
-    autoPlayTimerRef.current = setInterval(() => {
-      setStage((curr) => {
-        if (curr === 'resolved') {
-          setIsAutoPlaying(false);
+    const scheduleNext = (currentStage: DemoStage) => {
+      const dwell = STAGE_DURATIONS[currentStage];
+      // dwell === 0 or undefined means human gate — stop auto-play
+      if (dwell === 0 || dwell === undefined) {
+        setIsAutoPlaying(false);
+        return;
+      }
+      const delay = Math.max(dwell / playbackSpeed, 800);
+      autoPlayTimerRef.current = setTimeout(() => {
+        setStage((curr) => {
+          if (curr === 'resolved') {
+            setIsAutoPlaying(false);
+            return curr;
+          }
+          // Step next and schedule the following stage
+          const nextStages: Partial<Record<DemoStage, DemoStage>> = {
+            idle: 'incident_detected',
+            incident_detected: 'investigating',
+            investigating: 'capability_gap',
+            capability_gap: 'evaluating',
+            evaluating: 'evaluation_failed',
+            evaluation_failed: 'repairing',
+            repairing: 'verified',
+            verified: 'joining_workforce',
+            joining_workforce: 'resolved',
+          };
+          const next = nextStages[curr];
+          if (next) {
+            advanceToStage(next);
+            scheduleNext(next);
+          }
           return curr;
-        }
-        stepNext();
-        return curr;
-      });
-    }, interval);
+        });
+      }, delay) as unknown as NodeJS.Timeout;
+    };
+
+    scheduleNext(stage);
 
     return () => {
-      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
+      if (autoPlayTimerRef.current) {
+        clearTimeout(autoPlayTimerRef.current);
+        autoPlayTimerRef.current = null;
+      }
     };
-  }, [isAutoPlaying, playbackSpeed, stepNext]);
-
-  const startDemo = useCallback(() => {
-    setIsAutoPlaying(true);
-    if (stage === 'idle') {
-      stepNext();
-    }
-  }, [stage, stepNext]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAutoPlaying, playbackSpeed]);
 
   const pauseDemo = useCallback(() => {
     setIsAutoPlaying(false);
@@ -421,9 +643,22 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const resetDemo = useCallback(() => {
     setIsAutoPlaying(false);
+    if (autoPlayTimerRef.current) {
+      clearTimeout(autoPlayTimerRef.current);
+      autoPlayTimerRef.current = null;
+    }
     setStage('idle');
     setActiveScreen('command');
-    setIncident(INITIAL_INCIDENT);
+    const preset = SCENARIO_PRESETS[activeScenario] || SCENARIO_PRESETS['bellandur-flood'];
+    setIncident({
+      id: preset.incidentId,
+      title: preset.name,
+      description: preset.description,
+      severity: 'CRITICAL',
+      location: preset.location,
+      source: 'Gemini Multimodal Vision Grid',
+      timestamp: 'Just now',
+    });
     setMetrics({
       agentCount: 4,
       capabilityCount: 12,
@@ -435,27 +670,19 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     setAuthorityPolicies(INITIAL_POLICIES);
     setCapabilityModalOpen(false);
     setLiveDenialActive(false);
-    setEvents([
-      {
-        id: 'EVT-001',
-        timestamp: '00:01.120',
-        source: 'GEMINI',
-        title: 'Multimodal Surge Anomaly Detected',
-        detail: 'Gemini Vision sensor identified 0.85m water accumulation at Pier 4. Confidence: 98.4%.',
-        status: 'warning',
-        elapsedMs: 1120,
-      },
-      {
-        id: 'EVT-002',
-        timestamp: '00:01.840',
-        source: 'ORCHESTRATOR',
-        title: 'Incident INC-2047 Registered',
-        detail: 'Classified as HIGH severity flood risk. Initiating workforce capability scan.',
-        status: 'info',
-        elapsedMs: 1840,
-      },
-    ]);
-  }, []);
+    setEvents(SCENARIO_SEED_EVENTS[activeScenario] || SCENARIO_SEED_EVENTS['bellandur-flood']);
+  }, [activeScenario]);
+
+  const startDemo = useCallback(() => {
+    if (stage === 'resolved') {
+      resetDemo();
+      return;
+    }
+    if (stage === 'idle') {
+      advanceToStage('incident_detected');
+    }
+    setIsAutoPlaying(true);
+  }, [stage, advanceToStage, resetDemo]);
 
   const selectCandidate = useCallback((agentId: string) => {
     if (agentId === 'candidate-passage') {
@@ -487,11 +714,44 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     }, 2400);
   }, [addEvent]);
 
+  const setScenario = useCallback((scenarioId: ScenarioId) => {
+    // Full reset when switching scenario so demo is repeatable
+    setIsAutoPlaying(false);
+    if (autoPlayTimerRef.current) {
+      clearTimeout(autoPlayTimerRef.current);
+      autoPlayTimerRef.current = null;
+    }
+    setStage('idle');
+    setActiveScreen('command');
+    setActiveScenario(scenarioId);
+    setCapabilityModalOpen(false);
+    setLiveDenialActive(false);
+    setAgents(INITIAL_AGENTS);
+    setEvaluationTests(INITIAL_TESTS);
+    setAuthorityPolicies(INITIAL_POLICIES);
+    setMetrics({ agentCount: 4, capabilityCount: 12, activeIncidents: 1, trustScore: 94 });
+    const preset = SCENARIO_PRESETS[scenarioId];
+    if (preset) {
+      setIncident({
+        id: preset.incidentId,
+        title: preset.name,
+        description: preset.description,
+        severity: 'CRITICAL',
+        location: preset.location,
+        source: 'Gemini Multimodal Vision Grid',
+        timestamp: 'Just now',
+      });
+      setEvents(SCENARIO_SEED_EVENTS[scenarioId] || []);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <DemoContext.Provider
       value={{
         stage,
         activeScreen,
+        activeScenario,
         isAutoPlaying,
         playbackSpeed,
         incident,
@@ -503,6 +763,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         capabilityModalOpen,
         liveDenialActive,
         setScreen: setActiveScreen,
+        setScenario,
         startDemo,
         pauseDemo,
         resetDemo,
@@ -510,6 +771,12 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         setSpeed: setPlaybackSpeed,
         openCapabilityModal: () => setCapabilityModalOpen(true),
         closeCapabilityModal: () => setCapabilityModalOpen(false),
+        reportModalOpen,
+        openReportModal: () => setReportModalOpen(true),
+        closeReportModal: () => setReportModalOpen(false),
+        visionModalOpen,
+        openVisionModal: () => setVisionModalOpen(true),
+        closeVisionModal: () => setVisionModalOpen(false),
         selectCandidate,
         repairAgent,
         triggerLiveDenial,

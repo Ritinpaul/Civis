@@ -14,8 +14,8 @@ Cities deploy AI workforces. When they encounter problems their agents can't sol
 
 ## Demo Environment
 
-- **City**: Chennai, India (monsoon-season flooding)
-- **Zone**: Zone 4 (Saidapet / Velachery corridor)
+- **City**: Bengaluru, Karnataka, India (monsoon waterlogging & lake overflow)
+- **Zone**: East Corridor (Bellandur / Silk Board / Outer Ring Road corridor)
 
 ---
 

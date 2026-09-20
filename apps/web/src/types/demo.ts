@@ -64,9 +64,56 @@ export interface AuthorityPolicy {
   status: 'allowed' | 'denied' | 'restricted';
 }
 
+export type ScenarioId = 'bellandur-flood' | 'silkboard-gridlock' | 'hebbal-surge';
+
+export interface VisionDetection {
+  label: string;
+  box: [number, number, number, number]; // [top %, left %, width %, height %]
+  confidence: number;
+  severity: 'critical' | 'warning' | 'info';
+}
+
+export interface VisionFeed {
+  camId: string;
+  camName: string;
+  timestamp: string;
+  resolution: string;
+  detections: VisionDetection[];
+}
+
+export interface IncidentDossier {
+  affectedCivilianEstimate: string;
+  transitDelayMinutes: number;
+  evacuationPriority: string;
+  nearestHub: string;
+  recommendedCapability: string;
+  tacticalNotes: string[];
+}
+
+export interface ScenarioInfo {
+  id: ScenarioId;
+  name: string;
+  zone: string;
+  tag: string;
+  incidentId: string;
+  location: string;
+  description: string;
+  center: [number, number];
+  zoom: number;
+  primarySectorId: string;
+  hazardPolygon: [number, number][];
+  hazardLabel: string;
+  detourCoords: [number, number][];
+  detourLabel: string;
+  vehicleLabel: string;
+  visionFeed: VisionFeed;
+  dossier: IncidentDossier;
+}
+
 export interface DemoState {
   stage: DemoStage;
   activeScreen: 'command' | 'timeline' | 'workforce' | 'evaluation' | 'authority' | 'growth';
+  activeScenario: ScenarioId;
   isAutoPlaying: boolean;
   playbackSpeed: number; // 1x, 2x, 4x
   incident: {
@@ -91,3 +138,4 @@ export interface DemoState {
   capabilityModalOpen: boolean;
   liveDenialActive: boolean;
 }
+

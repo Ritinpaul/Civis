@@ -1,17 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #070709;
-  --surface-1: #0B0B0F;
-  --surface-2: #0F1015;
-  --surface-3: #14151B;
-  --surface-hover: #181A21;
-  --border: rgba(255, 255, 255, 0.075);
-  --border-strong: rgba(255, 255, 255, 0.14);
+  --bg: #050608;
+  --surface-1: #0B0D13;
+  --surface-2: #101219;
+  --surface-3: #141722;
+  --surface-hover: #1A1E2C;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
   --text-primary: #EDEDEF;
   --text-secondary: #8E8EA0;
   --text-muted: #52525B;
@@ -20,6 +18,7 @@
   --indigo: #6366F1;
   --purple: #818CF8;
   --amber: #F59E0B;
+  --cyan: #00D4FF;
 }
 
 * {
