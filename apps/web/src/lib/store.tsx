@@ -11,6 +11,11 @@ import {
   ScenarioId,
   ScenarioInfo,
 } from '@/types/demo';
+import {
+  BELLANDUR_ROAD_DETOUR,
+  SILKBOARD_ROAD_DETOUR,
+  HEBBAL_ROAD_DETOUR,
+} from '@/data/roadRoutes';
 
 export const SCENARIO_PRESETS: Record<ScenarioId, ScenarioInfo> = {
   'bellandur-flood': {
@@ -32,13 +37,7 @@ export const SCENARIO_PRESETS: Record<ScenarioId, ScenarioInfo> = {
       [12.9280, 77.6650],
     ],
     hazardLabel: 'Bellandur Spillway Inundation Basin',
-    detourCoords: [
-      [12.9177, 77.6238],
-      [12.9300, 77.6350],
-      [12.9560, 77.6980],
-      [12.9431, 77.7470],
-      [12.9333, 77.6690],
-    ],
+    detourCoords: BELLANDUR_ROAD_DETOUR,
     detourLabel: 'SLK ➔ MRH ➔ BLR-APP',
     vehicleLabel: 'ALS 4x4 · IN TRANSIT (14M ETA)',
     visionFeed: {
@@ -83,12 +82,7 @@ export const SCENARIO_PRESETS: Record<ScenarioId, ScenarioInfo> = {
       [12.9110, 77.6160],
     ],
     hazardLabel: 'Silk Board Multi-Agency Gridlock Zone',
-    detourCoords: [
-      [12.9177, 77.6238],
-      [12.8950, 77.6400],
-      [12.8700, 77.6520],
-      [12.8450, 77.6650],
-    ],
+    detourCoords: SILKBOARD_ROAD_DETOUR,
     detourLabel: 'SLK ➔ HOSUR RD ➔ E-CITY',
     vehicleLabel: 'TRAFFIC SWARM · RAPID ESCORT',
     visionFeed: {
@@ -133,12 +127,7 @@ export const SCENARIO_PRESETS: Record<ScenarioId, ScenarioInfo> = {
       [13.0280, 77.5840],
     ],
     hazardLabel: 'Hebbal Expressway Inundation Sump',
-    detourCoords: [
-      [13.0358, 77.5920],
-      [13.0480, 77.6190],
-      [13.0650, 77.6250],
-      [13.0850, 77.6350],
-    ],
+    detourCoords: HEBBAL_ROAD_DETOUR,
     detourLabel: 'HBL ➔ MANYATA ➔ AIRPORT EXPY',
     vehicleLabel: 'HIGH-CLEARANCE RESCUE · EN ROUTE',
     visionFeed: {

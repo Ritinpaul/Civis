@@ -160,18 +160,6 @@ export const BENGALURU_NODES: CivicNode[] = [
   },
 ];
 
-// Detour trajectory coordinates (Silk Board to Bellandur via HAL Airport Road)
-const DETOUR_COORDS: [number, number][] = [
-  [12.9177, 77.6238], // Silk Board Hub A
-  [12.9350, 77.6320], // Koramangala Ingress
-  [12.9520, 77.6480], // Domlur / Intermediate Ring Road
-  [12.9600, 77.6650], // Old Airport Road Bypass
-  [12.9580, 77.6850], // HAL Elevation Corridor
-  [12.9560, 77.6980], // Marathahalli ORR
-  [12.9420, 77.6820], // Devarabeesanahalli Elevated Slip
-  [12.9333, 77.6690], // Bellandur Spillway Bridge
-];
-
 // Bellandur Spillway Flood Polygon coordinates
 const FLOOD_POLYGON_COORDS: [number, number][] = [
   [12.9300, 77.6620],
@@ -288,7 +276,7 @@ export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapPro
         iconAnchor: [14, 14],
       });
 
-      const vehicleMarker = L.marker(DETOUR_COORDS[0], { icon: vehicleIcon }).addTo(map);
+      const vehicleMarker = L.marker(currentScenario.detourCoords[0], { icon: vehicleIcon }).addTo(map);
       vehicleMarkerRef.current = vehicleMarker;
 
       // 4. Civic Node Markers
@@ -413,21 +401,25 @@ export function TacticalMap({ selectedSectorId, onSelectSector }: TacticalMapPro
     });
   }, [activeScenario, isMapReady, isResolved]);
 
-  // Animate the vehicle along the active scenario's detour path
+  // Animate the vehicle along the active scenario's road-aligned detour path
   useEffect(() => {
     if (!isMapReady || !vehicleMarkerRef.current) return;
 
     let step = 0;
     const coords = currentScenario.detourCoords;
+    if (!coords || coords.length === 0) return;
+
+    // Place vehicle at first coordinate immediately
+    vehicleMarkerRef.current.setLatLng(coords[0]);
+
     const interval = setInterval(() => {
-      if (!coords || coords.length === 0) return;
       step = (step + 1) % coords.length;
       const targetCoord = coords[step];
       vehicleMarkerRef.current.setLatLng(targetCoord);
-    }, 1800);
+    }, 120);
 
     return () => clearInterval(interval);
-  }, [isMapReady, activeScenario]);
+  }, [isMapReady, activeScenario, currentScenario]);
 
   // Center on selected sector with smooth flying animation and open tooltip
   useEffect(() => {
