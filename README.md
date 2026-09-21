@@ -55,71 +55,81 @@ The city no longer waits for bureaucratic meetings. Its intelligence adapts in r
 
 ## System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    BROWSER — Next.js 14 Command Center                  │
-│          Leaflet GIS  ·  React Flow Mesh  ·  ICS Form 209 PDF           │
-└────────────────────────────────┬────────────────────────────────────────┘
-                                 │  HTTP + Server-Sent Events (SSE)
-                                 ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         FASTAPI RUNTIME                                 │
-│                                                                         │
-│   ┌──────────────────┐  ┌────────────────────┐  ┌───────────────────┐  │
-│   │   EventBus       │  │  GovernOS Authority │  │ Capability        │  │
-│   │   Pub/Sub + SSE  │  │  Tool Sandboxing    │  │ Registry (SQL)    │  │
-│   └────────┬─────────┘  └─────────┬──────────┘  └────────┬──────────┘  │
-│            │                      │                       │             │
-│            └──────────────────────┼───────────────────────┘             │
-│                                   ▼                                     │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │                  ACTIVE AGENT WORKFORCE MESH                    │   │
-│   │                                                                 │   │
-│   │   WeatherAgent  ·  TrafficAgent  ·  InfraAgent  ·  Emergency   │   │
-│   │                          ↕  A2A Protocol v2.4                  │   │
-│   │                    [+ SynthesizedAgent on demand]               │   │
-│   └─────────────────────────────┬───────────────────────────────────┘   │
-│                                 │  Capability Gap Detected               │
-│                                 ▼                                        │
-│   ┌─────────────────────────────────────────────────────────────────┐   │
-│   │                  ADAPTATION ENGINE (FORGE)                      │   │
-│   │                                                                 │   │
-│   │   1. Decompose missing capability from incident telemetry       │   │
-│   │   2. Generate specialist agent code via Gemini 2.5 Pro          │   │
-│   │   3. Run GovernOS evaluation battery T01–T07                    │   │
-│   │   4. Self-repair flawed logic via Failure Diagnostics           │   │
-│   │   5. Protocol Zero — human authorization gate (30s countdown)   │   │
-│   │   6. Persist capability with SHA-256 provenance hash            │   │
-│   └──────────────────────┬──────────────────────────────────────────┘   │
-└─────────────────────────┬┘                                               │
-                          │                                                │
-         ┌────────────────┴──────────────────┐                            │
-         ▼                                   ▼                            │
-┌────────────────────┐             ┌──────────────────────┐               │
-│  Google Gemini     │             │    PostgreSQL 15      │               │
-│  2.5 Flash · Pro   │             │  Agents & Charters   │               │
-│  Vision · Reasoning│             │  Capabilities & Code │               │
-│  Code Synthesis    │             │  Provenance Events   │               │
-└────────────────────┘             └──────────────────────┘               │
+```mermaid
+flowchart TD
+    Browser["🖥️ Next.js 14 Command Center\nLeaflet GIS · React Flow · ICS PDF"]
+
+    Browser -->|HTTP + SSE| FastAPI
+
+    subgraph FastAPI["⚡ FastAPI Runtime"]
+        EventBus["📡 EventBus\nPub/Sub + SSE Stream"]
+        GovernOS["🛡️ GovernOS Authority\nTool Sandboxing"]
+        Registry["📋 Capability Registry\nDynamic Schema Store"]
+    end
+
+    EventBus & GovernOS & Registry --> Mesh
+
+    subgraph Mesh["🕸️ A2A Agent Workforce Mesh"]
+        direction LR
+        W[WeatherAgent]
+        T[TrafficAgent]
+        I[InfraAgent]
+        E[EmergencyAgent]
+        S(["+ SynthesizedAgent\non demand"])
+    end
+
+    Mesh -->|Capability Gap Detected| Forge
+
+    subgraph Forge["🔧 Adaptation Engine"]
+        F1["1. Decompose Capability Gap"]
+        F2["2. Synthesize Specialist Code"]
+        F3["3. GovernOS Evaluation T01–T07"]
+        F4["4. Self-Repair Flawed Logic"]
+        F5["5. Protocol Zero Auth Gate"]
+        F6["6. Persist with SHA-256 Hash"]
+        F1 --> F2 --> F3 --> F4 --> F5 --> F6
+    end
+
+    Forge --> Gemini
+    Forge --> Postgres
+
+    Gemini["🤖 Google Gemini 2.5\nFlash · Pro · Vision"]
+    Postgres[("🗄️ PostgreSQL 15\nAgents · Capabilities\nProvenance Events")]
+
+    style Browser fill:#0f172a,stroke:#38bdf8,color:#e2e8f0
+    style FastAPI fill:#0f172a,stroke:#6366f1,color:#e2e8f0
+    style Mesh fill:#0f172a,stroke:#22c55e,color:#e2e8f0
+    style Forge fill:#0f172a,stroke:#f59e0b,color:#e2e8f0
+    style Gemini fill:#0f172a,stroke:#4285f4,color:#e2e8f0
+    style Postgres fill:#0f172a,stroke:#336791,color:#e2e8f0
 ```
 
-### Data Flow
+### Capability Adaptation Data Flow
 
-```
-Sensor Anomaly → EventBus → Orchestrator → Capability Registry Lookup
-                                                      │
-                                      ┌───────────────┴───────────────┐
-                                      │                               │
-                                 Found ✓                         Not Found ✗
-                                      │                               │
-                              Standard Dispatch               Forge Activation
-                                      │                               │
-                              Swarm Execution               Synthesize → Evaluate
-                                      │                     → Self-Repair → Auth Gate
-                              Incident Resolved                        │
-                                                              Registry Updated
-                                                              Swarm Execution
-                                                              Incident Resolved
+```mermaid
+flowchart LR
+    A(["⚠️ Sensor Anomaly"]) --> B[EventBus]
+    B --> C[Orchestrator]
+    C --> D{{Capability\nRegistry Lookup}}
+
+    D -->|Found ✓| E[Standard Dispatch]
+    D -->|Not Found ✗| F[Forge Activation]
+
+    E --> G(["✅ Incident Resolved"])
+
+    F --> H[Gemini Synthesizes Agent]
+    H --> I[GovernOS Evaluation T01–T07]
+    I -->|Pass| J[Protocol Zero Auth]
+    I -->|Fail| K[Self-Repair Loop]
+    K --> I
+    J --> L[Registry Updated]
+    L --> E
+
+    style A fill:#7f1d1d,stroke:#ef4444,color:#fecaca
+    style G fill:#14532d,stroke:#22c55e,color:#bbf7d0
+    style F fill:#78350f,stroke:#f59e0b,color:#fef3c7
+    style K fill:#1e1b4b,stroke:#8b5cf6,color:#ede9fe
+    style J fill:#0c4a6e,stroke:#38bdf8,color:#e0f2fe
 ```
 
 ---
@@ -159,6 +169,33 @@ Every agent operates within a signed municipal charter defining its `allowed_too
 
 ### Protocol Zero — Human-in-the-Loop
 Before any synthesized agent joins the live workforce, a human operator receives a 30-second authorization countdown with full constitutional safety bounds displayed. The AI does not proceed without explicit human sign-off.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Op as 👤 Civic Operator
+    participant PZ as Protocol Zero Gate
+    participant Forge as Adaptation Forge
+    participant Gov as GovernOS
+    participant Mesh as A2A Workforce Mesh
+    participant DB as PostgreSQL
+
+    Forge->>Gov: Submit candidate agent for evaluation
+    Gov->>Gov: Run T01–T07 battery
+    alt Policy violation detected
+        Gov-->>Forge: ❌ HALT — T03 FAIL (scope violation)
+        Forge->>Forge: Diagnose & self-repair
+        Forge->>Gov: Resubmit patched candidate
+        Gov->>Gov: Re-run battery
+    end
+    Gov-->>PZ: ✅ All 7 batteries passed
+    PZ->>Op: 🔔 Authorization required (30s countdown)
+    Op-->>PZ: ✅ APPROVE — Scope Remediation Confirmed
+    PZ->>Mesh: Authorize agent deployment
+    Mesh->>DB: Persist capability + SHA-256 provenance hash
+    DB-->>Mesh: Confirmed
+    Mesh-->>Op: 🟢 Agent live — workforce expanded
+```
 
 ### Cryptographic Provenance Ledger
 Every adaptation cycle, evaluation run, repair event, and authorization decision is hashed with SHA-256 and chained into an immutable audit log. Municipal accountability is enforced by design.
