@@ -297,6 +297,84 @@ Civis/
 
 ---
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in the required values before running.
+
+| Variable | Required | Default | Description |
+| :--- | :---: | :--- | :--- |
+| `GEMINI_API_KEY` | ✅ | — | Google Gemini API key — powers vision, synthesis, and chain-of-thought |
+| `DATABASE_URL` | ✅ | `postgresql://civis:civis@localhost:5432/civis` | PostgreSQL connection string |
+| `OPENROUTER_API_KEY` | ⬜ | — | Optional OpenRouter key for model fallback routing |
+| `ENVIRONMENT` | ⬜ | `development` | `development` or `production` |
+| `DEMO_MODE` | ⬜ | `true` | Enables pre-seeded demo responses when Gemini is unavailable |
+| `LOG_LEVEL` | ⬜ | `INFO` | Logging verbosity (`DEBUG` / `INFO` / `WARNING`) |
+| `ALLOWED_ORIGINS` | ⬜ | `http://localhost:3000` | CORS whitelist (comma-separated URLs) |
+| `NEXT_PUBLIC_API_URL` | ⬜ | `http://localhost:8000` | Backend URL used by the Next.js frontend |
+| `DEMO_ACT1_DELAY` | ⬜ | `0.5` | Act I simulation delay (seconds) |
+| `DEMO_ACT2_DELAY` | ⬜ | `0.5` | Act II simulation delay (seconds) |
+| `DEMO_ACT3_DELAY` | ⬜ | `0.8` | Act III simulation delay (seconds) |
+| `DEMO_ACT4_DELAY` | ⬜ | `0.5` | Act IV simulation delay (seconds) |
+
+> **Note**: `DEMO_MODE=true` means the system falls back to hardcoded realistic responses if Gemini is unavailable — the full UI and narrative work without an API key in demo mode.
+
+---
+
+## API Reference
+
+Interactive Swagger docs at `http://localhost:8000/docs` after startup.
+
+### Core Endpoints
+
+| Method | Endpoint | Description |
+| :---: | :--- | :--- |
+| `GET` | `/health` | Service health check |
+| `GET` | `/api/v1/incidents` | List all incidents |
+| `POST` | `/api/v1/incidents` | Create a new incident |
+| `GET` | `/api/v1/incidents/{id}` | Get incident detail + timeline |
+| `POST` | `/api/v1/incidents/act1` | Trigger Act I — baseline agent dispatch |
+| `POST` | `/api/v1/incidents/act2` | Trigger Act II — capability gap detection |
+| `GET` | `/api/v1/workforce/agents` | List all agents in the workforce mesh |
+| `POST` | `/api/v1/workforce/agents/{id}/execute` | Execute a specific agent tool |
+| `GET` | `/api/v1/capabilities` | List the municipal capability registry |
+| `POST` | `/api/v1/capabilities/search` | Query registry for a capability by name |
+| `POST` | `/api/v1/forge` | Synthesize a new specialist agent |
+| `POST` | `/api/v1/evaluations/run` | Run the GovernOS T01–T07 evaluation battery |
+| `POST` | `/api/v1/repair` | Trigger self-repair on a failed candidate |
+| `GET` | `/api/v1/events/stream` | SSE stream of live incident events |
+| `GET` | `/api/v1/provenance` | List cryptographic provenance audit log |
+| `GET` | `/api/v1/provenance/timeline/{id}` | Full SHA-256 chain for an incident |
+| `GET` | `/api/v1/authority/matrix` | View the full agent authority permission matrix |
+
+---
+
+## Known Limitations
+
+Honest constraints of the current implementation:
+
+| # | Limitation | Context |
+| :-- | :--- | :--- |
+| 1 | **CCTV feeds are simulated** | Tri-spectral camera views are generated from static images + CSS overlays, not live video streams. A real deployment would connect to actual CCTV RTSP feeds. |
+| 2 | **IoT sensor data is seeded** | Flood depth, temperature, and flow rate readings are pre-seeded into PostgreSQL. Production would wire to live sensor APIs (BBMP SCADA / IMD feeds). |
+| 3 | **Agent synthesis is prompt-based** | The Forge generates Python-like pseudocode, not fully executable agent binaries. A production system would sandbox and run the synthesized code in an isolated container. |
+| 4 | **Protocol Zero is a 30s timer** | Human authorization is simulated via a countdown. A real deployment would integrate with operator authentication (MFA, on-call pager systems). |
+| 5 | **Map routing uses pre-computed geometries** | Road-aligned detour paths are pre-computed OSRM routes, not live routing API calls. Real-time routing would require an OSRM or Valhalla server. |
+
+---
+
+## Roadmap
+
+Capabilities planned for future iterations:
+
+- [ ] **Live IoT Sensor Ingestion** — Wire BBMP stormwater SCADA and IMD weather feeds directly into the EventBus
+- [ ] **Real CCTV Integration** — Replace simulated feeds with RTSP stream processing via Gemini Video API
+- [ ] **Mobile Command App** — React Native companion app for field operators to approve Protocol Zero on-the-go
+- [ ] **Multi-City Support** — Extend scenario presets beyond Bengaluru (Chennai, Mumbai, Hyderabad flood corridors)
+- [ ] **Executable Agent Sandbox** — Run Forge-synthesized agent code in a gVisor-isolated container runtime
+- [ ] **Federated GovernOS** — Cross-agency authority mesh with distributed consensus for multi-city emergency coordination
+
+---
+
 <div align="center">
   <sub>Built for resilient, adaptive cities of tomorrow.</sub>
 </div>
