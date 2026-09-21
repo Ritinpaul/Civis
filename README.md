@@ -348,33 +348,6 @@ Interactive Swagger docs at `http://localhost:8000/docs` after startup.
 
 ---
 
-## Known Limitations
-
-Honest constraints of the current implementation:
-
-| # | Limitation | Context |
-| :-- | :--- | :--- |
-| 1 | **CCTV feeds are simulated** | Tri-spectral camera views are generated from static images + CSS overlays, not live video streams. A real deployment would connect to actual CCTV RTSP feeds. |
-| 2 | **IoT sensor data is seeded** | Flood depth, temperature, and flow rate readings are pre-seeded into PostgreSQL. Production would wire to live sensor APIs (BBMP SCADA / IMD feeds). |
-| 3 | **Agent synthesis is prompt-based** | The Forge generates Python-like pseudocode, not fully executable agent binaries. A production system would sandbox and run the synthesized code in an isolated container. |
-| 4 | **Protocol Zero is a 30s timer** | Human authorization is simulated via a countdown. A real deployment would integrate with operator authentication (MFA, on-call pager systems). |
-| 5 | **Map routing uses pre-computed geometries** | Road-aligned detour paths are pre-computed OSRM routes, not live routing API calls. Real-time routing would require an OSRM or Valhalla server. |
-
----
-
-## Roadmap
-
-Capabilities planned for future iterations:
-
-- [ ] **Live IoT Sensor Ingestion** — Wire BBMP stormwater SCADA and IMD weather feeds directly into the EventBus
-- [ ] **Real CCTV Integration** — Replace simulated feeds with RTSP stream processing via Gemini Video API
-- [ ] **Mobile Command App** — React Native companion app for field operators to approve Protocol Zero on-the-go
-- [ ] **Multi-City Support** — Extend scenario presets beyond Bengaluru (Chennai, Mumbai, Hyderabad flood corridors)
-- [ ] **Executable Agent Sandbox** — Run Forge-synthesized agent code in a gVisor-isolated container runtime
-- [ ] **Federated GovernOS** — Cross-agency authority mesh with distributed consensus for multi-city emergency coordination
-
----
-
 <div align="center">
   <sub>Built for resilient, adaptive cities of tomorrow.</sub>
 </div>
