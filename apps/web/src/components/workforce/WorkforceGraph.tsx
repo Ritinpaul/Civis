@@ -5,6 +5,7 @@ import { useDemo } from '@/lib/store';
 import {
   ReactFlow,
   Background,
+  BackgroundVariant,
   Controls,
   Node,
   Edge,
@@ -282,8 +283,13 @@ export function WorkforceGraph() {
           maxZoom={1.5}
           className="bg-dot-grid"
         >
-          <Background color="#14151B" gap={24} size={1} />
-          <Controls className="!bg-[#0E1119] !border !border-white/10 !fill-white" />
+          <Background
+            variant={BackgroundVariant.Dots}
+            color="rgba(255, 255, 255, 0.16)"
+            gap={22}
+            size={1.5}
+          />
+          <Controls showInteractive={false} />
         </ReactFlow>
       </div>
     </div>

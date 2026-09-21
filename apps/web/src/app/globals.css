@@ -103,7 +103,44 @@ body {
 
 /* React Flow styling overrides */
 .react-flow__background {
-  background-color: #070709 !important;
+  background-color: #07080B !important;
+}
+
+.react-flow__controls {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.7) !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  overflow: hidden !important;
+  background: #141722 !important;
+}
+
+.react-flow__controls-button {
+  background: #161924 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  fill: #94A3B8 !important;
+  color: #94A3B8 !important;
+  width: 28px !important;
+  height: 28px !important;
+  transition: all 0.15s ease !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls-button:hover {
+  background: #252A3B !important;
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
 }
 
 .react-flow__edge-path {
